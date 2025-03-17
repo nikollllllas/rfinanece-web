@@ -3,8 +3,8 @@ import {
   ClockIcon,
   UserGroupIcon,
   InboxIcon,
-} from '@heroicons/react/24/outline';
-import { lusitana } from '@/app/ui/fonts';
+} from "@heroicons/react/24/outline";
+import { Lusitana } from "next/font/google";
 
 const iconMap = {
   collected: BanknotesIcon,
@@ -12,6 +12,7 @@ const iconMap = {
   pending: ClockIcon,
   invoices: InboxIcon,
 };
+const lusitana = Lusitana({ weight: ["400", "700"] });
 
 export default async function CardWrapper() {
   return (
@@ -37,7 +38,7 @@ export function Card({
 }: {
   title: string;
   value: number | string;
-  type: 'invoices' | 'customers' | 'pending' | 'collected';
+  type: "invoices" | "customers" | "pending" | "collected";
 }) {
   const Icon = iconMap[type];
 

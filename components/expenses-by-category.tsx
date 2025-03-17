@@ -1,7 +1,14 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
+import { useEffect, useState } from "react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from "recharts";
 
 // Sample data - in a real app, this would come from your database
 const data = [
@@ -11,17 +18,17 @@ const data = [
   { name: "Entretenimento", value: 250, color: "#ff8042" },
   { name: "Utilidades", value: 220, color: "#0088fe" },
   { name: "Outros", value: 220, color: "#00C49F" },
-]
+];
 
 export default function ExpensesByCategory() {
-  const [mounted, setMounted] = useState(false)
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   if (!mounted) {
-    return null
+    return null;
   }
 
   return (
@@ -35,16 +42,23 @@ export default function ExpensesByCategory() {
           outerRadius={80}
           fill="#8884d8"
           dataKey="value"
-          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+          label={({ name, percent }) =>
+            `${name} ${(percent * 100).toFixed(0)}%`
+          }
         >
           {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={entry.color} />
+            <Cell
+              key={`cell-${
+                // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+                index
+              }`}
+              fill={entry.color}
+            />
           ))}
         </Pie>
         <Tooltip formatter={(value) => [`$${value}`, "Amount"]} />
         <Legend />
       </PieChart>
     </ResponsiveContainer>
-  )
+  );
 }
-

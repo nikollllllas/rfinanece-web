@@ -35,12 +35,6 @@ const routes = [
     color: "text-pink-700",
   },
   {
-    label: "Categorias",
-    icon: PieChart,
-    href: "/categories",
-    color: "text-emerald-500",
-  },
-  {
     label: "Configurações",
     icon: Settings,
     href: "/settings",
@@ -97,6 +91,9 @@ export default function Sidebar() {
                 isCollapsed ? "rotate-180" : "rotate-0"
               )}
             >
+              <title>
+                {isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              </title>
               <path d="m15 6-6 6 6 6" />
             </svg>
           </Button>

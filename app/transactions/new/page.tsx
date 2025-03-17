@@ -34,9 +34,7 @@ export default function NewTransactionPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you would save the transaction to your database here
 
-    // Navigate back to transactions page
     router.push("/transactions");
   };
 
