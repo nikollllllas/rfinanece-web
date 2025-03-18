@@ -23,7 +23,7 @@ const budgetUpdateSchema = z.object({
   categoryId: z.string().uuid("Categoria inválida").optional(),
 })
 
-export async function GET(props: { params: { id: string } }) {
+export async function GET(request: NextRequest, props: { params: { id: string } }) {
   try {
     const id = props.params.id
 
@@ -91,7 +91,7 @@ export async function PUT(request: NextRequest, props: { params: { id: string } 
   }
 }
 
-export async function DELETE(props: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, props: { params: { id: string } }) {
   try {
     const id = props.params.id
 
