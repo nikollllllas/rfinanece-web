@@ -47,9 +47,10 @@ export async function GET(request: NextRequest, props: { params: paramsProps }) 
   }
 }
 
-export async function PUT(request: NextRequest, props: { params: { id: string } }) {
+export async function PUT(request: NextRequest, props: { params: paramsProps }) {
   try {
-    const id = props.params.id
+    const { params } = await props.params
+    const id = params.id
     const body = await request.json()
 
     const validationResult = budgetUpdateSchema.safeParse(body)
