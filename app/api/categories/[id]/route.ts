@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { z } from "zod"
+import { paramsProps } from "../../_types/types"
 
 // Define validation schema for category updates
 const categoryUpdateSchema = z.object({
@@ -14,9 +15,10 @@ const categoryUpdateSchema = z.object({
   isDefault: z.boolean().optional(),
 })
 
-export async function GET(request: NextRequest, props: { params: { id: string } }) {
+export async function GET(request: NextRequest, props: { params: paramsProps }) {
   try {
-    const id = props.params.id
+    const { params } = await props.params
+    const id = params.id
 
     const category = await prisma.category.findUnique({
       where: { id },
@@ -33,9 +35,10 @@ export async function GET(request: NextRequest, props: { params: { id: string } 
   }
 }
 
-export async function PUT(request: NextRequest, props: { params: { id: string } }) {
+export async function PUT(request: NextRequest, props: { params: paramsProps }) {
   try {
-    const id = props.params.id
+    const { params } = await props.params
+    const id = params.id
     const body = await request.json()
 
     // Validate request data
@@ -87,9 +90,10 @@ export async function PUT(request: NextRequest, props: { params: { id: string } 
   }
 }
 
-export async function DELETE(request: NextRequest, props: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, props: { params: paramsProps }) {
   try {
-    const id = props.params.id
+    const { params } = await props.params
+    const id = params.id
 
     // Check if the category exists
     const existingCategory = await prisma.category.findUnique({

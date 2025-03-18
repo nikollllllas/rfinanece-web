@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { z } from "zod"
+import { paramsProps } from "../../_types/types"
 
 const transactionUpdateSchema = z.object({
   description: z.string().min(1, "Insira uma descrição").optional(),
@@ -19,9 +20,10 @@ const transactionUpdateSchema = z.object({
   notes: z.string().optional().nullable(),
 })
 
-export async function GET(request: NextRequest, props: { params: { id: string } }) {
+export async function GET(request: NextRequest, props: { params: paramsProps }) {
   try {
-    const id = props.params.id
+    const { params } = await props.params
+    const id = params.id
 
     const transaction = await prisma.transaction.findUnique({
       where: { id },
@@ -41,9 +43,10 @@ export async function GET(request: NextRequest, props: { params: { id: string } 
   }
 }
 
-export async function PUT(request: NextRequest, props: { params: { id: string } }) {
+export async function PUT(request: NextRequest, props: { params: paramsProps }) {
   try {
-    const id = props.params.id
+    const { params } = await props.params
+    const id = params.id
     const body = await request.json()
 
     const validationResult = transactionUpdateSchema.safeParse(body)
@@ -87,9 +90,10 @@ export async function PUT(request: NextRequest, props: { params: { id: string } 
   }
 }
 
-export async function DELETE(request: NextRequest, props: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, props: { params: paramsProps }) {
   try {
-    const id = props.params.id
+    const { params } = await props.params
+    const id = params.id
 
     const existingTransaction = await prisma.transaction.findUnique({
       where: { id },

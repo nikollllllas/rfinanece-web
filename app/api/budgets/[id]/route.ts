@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { z } from "zod"
+import { paramsProps } from "../../_types/types"
 
 const budgetUpdateSchema = z.object({
   amount: z
@@ -23,9 +24,10 @@ const budgetUpdateSchema = z.object({
   categoryId: z.string().uuid("Categoria inválida").optional(),
 })
 
-export async function GET(request: NextRequest, props: { params: { id: string } }) {
+export async function GET(request: NextRequest, props: { params: paramsProps }) {
   try {
-    const id = props.params.id
+    const { params } = await props.params
+    const id = params.id
 
     const budget = await prisma.budget.findUnique({
       where: { id },
@@ -91,9 +93,10 @@ export async function PUT(request: NextRequest, props: { params: { id: string } 
   }
 }
 
-export async function DELETE(request: NextRequest, props: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, props: { params: paramsProps}) {
   try {
-    const id = props.params.id
+    const { params } = await props.params
+    const id = params.id
 
     const existingBudget = await prisma.budget.findUnique({
       where: { id },

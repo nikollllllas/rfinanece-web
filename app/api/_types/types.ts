@@ -1,0 +1,1 @@
+export type paramsProps = Promise<{ params: { id: string } }>
