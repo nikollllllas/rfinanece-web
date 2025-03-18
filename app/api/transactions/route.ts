@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { z } from "zod"
 
-// Define validation schema for transaction creation
 const transactionSchema = z.object({
   description: z.string().min(1, "Descrição é obrigatória"),
   amount: z

@@ -19,7 +19,7 @@ const transactionUpdateSchema = z.object({
   notes: z.string().optional().nullable(),
 })
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET({ params }: { params: { id: string } }) {
   try {
     const id = params.id
 
@@ -87,7 +87,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE({ params }: { params: { id: string } }) {
   try {
     const id = params.id
 
