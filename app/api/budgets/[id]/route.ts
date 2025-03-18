@@ -23,9 +23,9 @@ const budgetUpdateSchema = z.object({
   categoryId: z.string().uuid("Categoria inválida").optional(),
 })
 
-export async function GET({ params }: { params: { id: string } }) {
+export async function GET(props: { params: { id: string } }) {
   try {
-    const id = params.id
+    const id = props.params.id
 
     const budget = await prisma.budget.findUnique({
       where: { id },
@@ -45,9 +45,9 @@ export async function GET({ params }: { params: { id: string } }) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, props: { params: { id: string } }) {
   try {
-    const id = params.id
+    const id = props.params.id
     const body = await request.json()
 
     const validationResult = budgetUpdateSchema.safeParse(body)
@@ -91,9 +91,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE({ params }: { params: { id: string } }) {
+export async function DELETE(props: { params: { id: string } }) {
   try {
-    const id = params.id
+    const id = props.params.id
 
     const existingBudget = await prisma.budget.findUnique({
       where: { id },
