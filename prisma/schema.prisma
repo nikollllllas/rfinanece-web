@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Transaction {
+  id          String          @id @default(uuid())
+  description String
+  amount      Decimal         @db.Decimal(10, 2)
+  date        DateTime
+  notes       String?
+  type        TransactionType
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // Relations
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@index([categoryId])
+  @@index([date])
+  @@map("transactions")
+}
+
+model Category {
+  id        String        @id @default(uuid())
+  name      String        @unique
+  color     String        @default("#000000")
+  icon      String? // Store icon name or path
+  isDefault Boolean       @default(false)
+  type      CategoryType?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  transactions Transaction[]
+  budgets      Budget[]
+
+  @@map("categories")
+}
+
+model Budget {
+  id        String       @id @default(uuid())
+  amount    Decimal      @db.Decimal(10, 2)
+  period    BudgetPeriod
+  startDate DateTime
+  endDate   DateTime?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, period, startDate])
+  @@index([categoryId])
+  @@map("budgets")
+}
+
+enum TransactionType {
+  GANHO
+  GASTO
+}
+
+enum CategoryType {
+  GANHO
+  GASTO
+  AMBOS
+}
+
+enum BudgetPeriod {
+  DIÁRIO
+  SEMANAL
+  MENSAL
+  QUARTENAL
+  ANUAL
+  PERSONALIZADO
+}

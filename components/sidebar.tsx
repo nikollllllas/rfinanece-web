@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 
 const routes = [
   {
-    label: "Dashboard",
+    label: "Painel",
     icon: Home,
     href: "/",
     color: "text-sky-500",
@@ -29,16 +29,16 @@ const routes = [
     color: "text-violet-500",
   },
   {
-    label: "Carteiras",
+    label: "Orçamentos",
     icon: Wallet,
     href: "/budgets",
     color: "text-pink-700",
   },
   {
-    label: "Configurações",
-    icon: Settings,
-    href: "/settings",
-    color: "text-gray-500",
+    label: "Categorias",
+    icon: PieChart,
+    href: "/categories",
+    color: "text-green-500",
   },
 ];
 
@@ -65,7 +65,7 @@ export default function Sidebar() {
           {!isCollapsed && (
             <Link href="/" className="flex items-center gap-2">
               <Wallet className="h-6 w-6 text-primary" />
-              <span className="font-bold text-xl">RFinances</span>
+              <span className="font-bold text-xl">FinanceTrack</span>
             </Link>
           )}
           {isCollapsed && <Wallet className="h-6 w-6 text-primary mx-auto" />}
@@ -74,7 +74,9 @@ export default function Sidebar() {
             size="icon"
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="ml-auto"
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-label={
+              isCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"
+            }
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -91,9 +93,6 @@ export default function Sidebar() {
                 isCollapsed ? "rotate-180" : "rotate-0"
               )}
             >
-              <title>
-                {isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              </title>
               <path d="m15 6-6 6 6 6" />
             </svg>
           </Button>
@@ -128,7 +127,7 @@ export default function Sidebar() {
           >
             <Link href="/transactions/new">
               <Plus className="h-4 w-4" />
-              {!isCollapsed && <span className="ml-2">Nova transação</span>}
+              {!isCollapsed && <span className="ml-2">Nova Transação</span>}
             </Link>
           </Button>
         </div>

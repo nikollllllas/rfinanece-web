@@ -23,19 +23,61 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { DatePicker } from "@/components/ui/date-picker";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { DatePicker } from "@/components/ui/date-picker";
+import { createTransaction } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+import { useCategories } from "@/hooks/use-categories";
 
 export default function NewTransactionPage() {
   const router = useRouter();
-  const [transactionType, setTransactionType] = useState("expense");
+  const { toast } = useToast();
+  const { categories, isLoading: categoriesLoading } = useCategories();
+  const [transactionType, setTransactionType] = useState("GANHO");
   const [date, setDate] = useState<Date>(new Date());
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const filteredCategories = categories.filter(
+    (category) => category.type === transactionType || category.type === "AMBOS"
+  );
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
 
-    router.push("/transactions");
+    try {
+      const formData = new FormData(e.currentTarget);
+
+      const transactionData = {
+        description: formData.get("description") as string,
+        amount: Number.parseFloat(formData.get("amount") as string),
+        date: date.toISOString(),
+        type: transactionType as "GANHO" | "GASTO",
+        categoryId: formData.get("category") as string,
+        notes: (formData.get("notes") as string) || undefined,
+      };
+
+      await createTransaction(transactionData);
+
+      toast({
+        title: "Transação criada",
+        description: "Sua transação foi criada com sucesso.",
+      });
+
+      router.push("/transactions");
+      router.refresh(); // Atualiza a página para mostrar a nova transação
+    } catch (error) {
+      console.error("Erro ao criar transação:", error);
+      toast({
+        title: "Erro",
+        description:
+          error instanceof Error ? error.message : "Falha ao criar transação",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -49,35 +91,34 @@ export default function NewTransactionPage() {
             </Link>
           </Button>
           <div className="ml-4 flex items-center gap-2 font-semibold">
-            <span className="text-lg">Nova transação</span>
+            <span className="text-lg">Nova Transação</span>
           </div>
         </div>
       </header>
       <main className="flex-1 p-4 md:p-6">
         <Card className="mx-auto max-w-md">
           <CardHeader>
-            <CardTitle>Adicionar Nova transação</CardTitle>
-            <CardDescription>
-              Registre uma nova transação para manter seu orçamento atualizado.
-            </CardDescription>
+            <CardTitle>Adicionar Nova Transação</CardTitle>
+            <CardDescription>Registre uma nova ganho ou gasto</CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Tipo de transação</Label>
+                <Label>Tipo de Transação</Label>
                 <RadioGroup
-                  defaultValue="expense"
+                  defaultValue="GASTO"
                   className="flex gap-4"
                   onValueChange={setTransactionType}
+                  name="type"
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="expense" id="expense" />
+                    <RadioGroupItem value="GASTO" id="expense" />
                     <Label htmlFor="expense" className="cursor-pointer">
                       Gasto
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="income" id="income" />
+                    <RadioGroupItem value="GANHO" id="income" />
                     <Label htmlFor="income" className="cursor-pointer">
                       Ganho
                     </Label>
@@ -89,85 +130,74 @@ export default function NewTransactionPage() {
                 <Label htmlFor="description">Descrição</Label>
                 <Input
                   id="description"
-                  placeholder="ex: Mercado, Salário..."
+                  name="description"
+                  placeholder="ex: Compras no supermercado"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount</Label>
+                <Label htmlFor="amount">Valor</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 transform -translate-y-1/2">
                     R$
                   </span>
                   <Input
                     id="amount"
+                    name="amount"
                     type="number"
                     step="0.01"
                     min="0.01"
-                    placeholder="0.00"
+                    placeholder="0,00"
                     className="pl-9"
                     required
                   />
                 </div>
               </div>
 
-              <div className="space-y-2 flex flex-col">
+              <div className="space-y-2">
                 <Label htmlFor="date">Data</Label>
                 <DatePicker
                   date={date}
                   setDate={(newDate) => newDate && setDate(newDate)}
                 />
+                {/* Input oculto para incluir a data no envio do formulário */}
+                <input type="hidden" name="date" value={date.toISOString()} />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="category">Categoria</Label>
-                <Select
-                  required
-                  defaultValue={
-                    transactionType === "income" ? "income" : "food"
-                  }
-                >
+                <Select required name="category">
                   <SelectTrigger id="category">
-                    <SelectValue placeholder="Seleciona uma categoria" />
+                    <SelectValue placeholder="Selecione uma categoria" />
                   </SelectTrigger>
                   <SelectContent>
-                    {transactionType === "income" ? (
-                      <>
-                        <SelectItem value="income">Ganho</SelectItem>
-                        <SelectItem value="salary">Salário</SelectItem>
-                        <SelectItem value="freelance">Freelance</SelectItem>
-                        <SelectItem value="investment">
-                          Investimentos
+                    {categoriesLoading ? (
+                      <SelectItem value="loading" disabled>
+                        Carregando categorias...
+                      </SelectItem>
+                    ) : filteredCategories.length > 0 ? (
+                      filteredCategories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
                         </SelectItem>
-                        <SelectItem value="gift">Presente</SelectItem>
-                        <SelectItem value="other_income">Outros</SelectItem>
-                      </>
+                      ))
                     ) : (
-                      <>
-                        <SelectItem value="food">Comida</SelectItem>
-                        <SelectItem value="housing">Casa</SelectItem>
-                        <SelectItem value="transportation">
-                          Transporte
-                        </SelectItem>
-                        <SelectItem value="utilities">Utilidades</SelectItem>
-                        <SelectItem value="entertainment">
-                          Entretenimento
-                        </SelectItem>
-                        <SelectItem value="shopping">Comprinhas</SelectItem>
-                        <SelectItem value="health">Saúde</SelectItem>
-                        <SelectItem value="education">Educação</SelectItem>
-                        <SelectItem value="personal">Pessoal</SelectItem>
-                        <SelectItem value="other_expense">Outros</SelectItem>
-                      </>
+                      <SelectItem value="none" disabled>
+                        Nenhuma categoria disponível
+                      </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="notes">Notas (opcional)</Label>
-                <Input id="notes" placeholder="Detalhes adicionais..." />
+                <Label htmlFor="notes">Observações (Opcional)</Label>
+                <Input
+                  id="notes"
+                  name="notes"
+                  placeholder="Detalhes adicionais..."
+                />
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
@@ -175,10 +205,13 @@ export default function NewTransactionPage() {
                 variant="outline"
                 type="button"
                 onClick={() => router.push("/transactions")}
+                disabled={isLoading}
               >
                 Cancelar
               </Button>
-              <Button type="submit">Salvar transação</Button>
+              <Button type="submit" disabled={isLoading || categoriesLoading}>
+                {isLoading ? "Salvando..." : "Salvar Transação"}
+              </Button>
             </CardFooter>
           </form>
         </Card>

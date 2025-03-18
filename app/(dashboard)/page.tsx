@@ -21,13 +21,13 @@ export default function Dashboard() {
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-14 items-center px-4 md:px-6">
           <div className="flex items-center gap-2 font-semibold">
-            <span className="text-lg">RFinances</span>
+            <span className="text-lg">Painel</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <Button asChild size="sm">
               <Link href="/transactions/new">
                 <Plus className="mr-1 h-4 w-4" />
-                Nova transação
+                Nova Transação
               </Link>
             </Button>
           </div>
@@ -37,14 +37,12 @@ export default function Dashboard() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">
-                Balanço total
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Saldo Total</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">R$12,580.00</div>
+              <div className="text-2xl font-bold">R$ 12.580,00</div>
               <p className="text-xs text-muted-foreground">
-                +2.5% em relação ao mês anterior
+                +2,5% em relação ao mês anterior
               </p>
             </CardContent>
           </Card>
@@ -53,31 +51,31 @@ export default function Dashboard() {
               <CardTitle className="text-sm font-medium">Ganhos</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">R$4,200.00</div>
+              <div className="text-2xl font-bold">R$ 4.200,00</div>
               <p className="text-xs text-muted-foreground">
-                +5.2% em relação ao mês anterior
+                +5,2% em relação ao mês anterior
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Despesas</CardTitle>
+              <CardTitle className="text-sm font-medium">Gastos</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">R$2,640.00</div>
+              <div className="text-2xl font-bold">R$ 2.640,00</div>
               <p className="text-xs text-muted-foreground">
-                -1.8% em relação ao mês anterior
+                -1,8% em relação ao mês anterior
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Economias</CardTitle>
+              <CardTitle className="text-sm font-medium">Economia</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">R$1,560.00</div>
+              <div className="text-2xl font-bold">R$ 1.560,00</div>
               <p className="text-xs text-muted-foreground">
-                +12.3% em relação ao mês anterior
+                +12,3% em relação ao mês anterior
               </p>
             </CardContent>
           </Card>
@@ -85,9 +83,9 @@ export default function Dashboard() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
           <Card className="lg:col-span-4">
             <CardHeader>
-              <CardTitle>Visão geral</CardTitle>
+              <CardTitle>Visão Financeira</CardTitle>
               <CardDescription>
-                Atividade financeira nos últimos 6 meses
+                Sua atividade financeira nos últimos 6 meses
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -98,8 +96,10 @@ export default function Dashboard() {
           </Card>
           <Card className="lg:col-span-3">
             <CardHeader>
-              <CardTitle>Gastos por categoria</CardTitle>
-              <CardDescription>Separado por gastos mensais</CardDescription>
+              <CardTitle>Gastos por Categoria</CardTitle>
+              <CardDescription>
+                Detalhamento das suas gastos mensais
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Suspense fallback={<Skeleton className="h-[300px] w-full" />}>
@@ -111,9 +111,9 @@ export default function Dashboard() {
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Orçamentos</CardTitle>
+              <CardTitle>Progresso do Orçamento</CardTitle>
               <CardDescription>
-                Acompanhe seus limites de orçamento
+                Acompanhe suas metas de orçamento
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -127,11 +127,11 @@ export default function Dashboard() {
               <div>
                 <CardTitle>Transações Recentes</CardTitle>
                 <CardDescription>
-                  Seus últimos registros
+                  Suas últimas atividades financeiras
                 </CardDescription>
               </div>
               <Button asChild variant="outline" size="sm">
-                <Link href="/transactions">Ver tudo</Link>
+                <Link href="/transactions">Ver Todas</Link>
               </Button>
             </CardHeader>
             <CardContent>

@@ -1,60 +1,60 @@
-"use client"
+"use client";
 
-import { Progress } from "@/components/ui/progress"
-
-// Sample data - in a real app, this would come from your database
-const budgets = [
-  {
-    category: "Casa",
-    current: 1200,
-    max: 1300,
-    color: "bg-blue-500",
-  },
-  {
-    category: "Mercado",
-    current: 450,
-    max: 500,
-    color: "bg-green-500",
-  },
-  {
-    category: "Comida",
-    current: 100,
-    max: 210,
-    color: "bg-green-500",
-  },
-  {
-    category: "Transporte",
-    current: 300,
-    max: 350,
-    color: "bg-yellow-500",
-  },
-  {
-    category: "Entretenimento",
-    current: 250,
-    max: 200,
-    color: "bg-red-500",
-  },
-  {
-    category: "Utilidades",
-    current: 220,
-    max: 250,
-    color: "bg-purple-500",
-  },
-]
+import { Progress } from "@/components/ui/progress";
+import { Loader2 } from "lucide-react";
+import { useDashboard } from "@/hooks/use-dashboard";
 
 export default function BudgetProgress() {
+  const { dashboardData, isLoading, error } = useDashboard();
+
+  // Format currency in Brazilian Real
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(amount);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-[300px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Carregando orçamentos...</span>
+      </div>
+    );
+  }
+
+  if (error || !dashboardData) {
+    return (
+      <div className="flex justify-center items-center h-[300px]">
+        <p className="text-destructive">Erro ao carregar dados de orçamento.</p>
+      </div>
+    );
+  }
+
+  if (dashboardData.budgets.length === 0) {
+    return (
+      <div className="flex justify-center items-center h-[300px]">
+        <p className="text-muted-foreground">Nenhum orçamento definido.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      {budgets.map((budget) => {
-        const percentage = Math.min(Math.round((budget.current / budget.max) * 100), 100)
-        const isOverBudget = budget.current > budget.max
+      {dashboardData.budgets.map((budget) => {
+        const percentage = Math.min(
+          Math.round((budget.current / budget.max) * 100),
+          100
+        );
+        const isOverBudget = budget.current > budget.max;
 
         return (
-          <div key={budget.category} className="space-y-1">
+          <div key={budget.id} className="space-y-1">
             <div className="flex justify-between text-sm">
               <span>{budget.category}</span>
               <span className={isOverBudget ? "text-red-500 font-medium" : ""}>
-                R${budget.current} / R${budget.max}
+                {formatCurrency(budget.current)} / {formatCurrency(budget.max)}
                 {isOverBudget && " (Acima do orçamento)"}
               </span>
             </div>
@@ -64,9 +64,8 @@ export default function BudgetProgress() {
               indicatorClassName={isOverBudget ? "bg-red-500" : budget.color}
             />
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }
-

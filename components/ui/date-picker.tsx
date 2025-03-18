@@ -45,6 +45,8 @@ export function DatePicker({ date, setDate, className }: DatePickerProps) {
           mode="single"
           selected={date}
           onSelect={setDate}
+          locale={ptBR}
+          weekStartsOn={0}
           initialFocus
         />
       </PopoverContent>

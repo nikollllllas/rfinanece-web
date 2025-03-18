@@ -11,18 +11,12 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-
-const data = [
-  { month: "Jan", ganhos: 3200, gastos: 1800, economia: 1400 },
-  { month: "Fev", ganhos: 3500, gastos: 2100, economia: 1400 },
-  { month: "Mar", ganhos: 3100, gastos: 1900, economia: 1200 },
-  { month: "Abr", ganhos: 3800, gastos: 2300, economia: 1500 },
-  { month: "Mai", ganhos: 4000, gastos: 2500, economia: 1500 },
-  { month: "Jun", ganhos: 4200, gastos: 2640, economia: 1560 },
-];
+import { Loader2 } from "lucide-react";
+import { useDashboard } from "@/hooks/use-dashboard";
 
 export default function FinancialOverview() {
   const [mounted, setMounted] = useState(false);
+  const { dashboardData, isLoading, error } = useDashboard();
 
   useEffect(() => {
     setMounted(true);
@@ -32,10 +26,35 @@ export default function FinancialOverview() {
     return null;
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-[300px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Carregando dados financeiros...</span>
+      </div>
+    );
+  }
+
+  if (error || !dashboardData) {
+    return (
+      <div className="flex justify-center items-center h-[300px]">
+        <p className="text-destructive">Erro ao carregar dados financeiros.</p>
+      </div>
+    );
+  }
+
+  // Format currency for tooltip
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+  };
+
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart
-        data={data}
+        data={dashboardData.monthlyData}
         margin={{
           top: 5,
           right: 30,
@@ -45,20 +64,37 @@ export default function FinancialOverview() {
       >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="month" />
-        <YAxis />
+        <YAxis tickFormatter={(value) => `R$${value}`} />
         <Tooltip
-          formatter={(value) => [`$${value}`, undefined]}
+          formatter={(value) => [formatCurrency(Number(value)), undefined]}
           labelFormatter={(label) => `Mês: ${label}`}
         />
-        <Legend />
+        <Legend
+          payload={[
+            { value: "GANHOs", type: "line", color: "#8884d8" },
+            { value: "Gastos", type: "line", color: "#ff7300" },
+            { value: "Economia", type: "line", color: "#82ca9d" },
+          ]}
+        />
         <Line
           type="monotone"
-          dataKey="ganhos"
+          dataKey="income"
+          name="GANHOs"
           stroke="#8884d8"
           activeDot={{ r: 8 }}
         />
-        <Line type="monotone" dataKey="gastos" stroke="#ff0000" />
-        <Line type="monotone" dataKey="economia" stroke="#82ca9d" />
+        <Line
+          type="monotone"
+          dataKey="expenses"
+          name="Gastos"
+          stroke="#ff7300"
+        />
+        <Line
+          type="monotone"
+          dataKey="savings"
+          name="Economia"
+          stroke="#82ca9d"
+        />
       </LineChart>
     </ResponsiveContainer>
   );
