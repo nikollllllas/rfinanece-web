@@ -15,9 +15,9 @@ const categoryUpdateSchema = z.object({
   isDefault: z.boolean().optional(),
 })
 
-export async function GET(request: NextRequest,{ params }: Params) {
+export async function GET(request: NextRequest,{ params }: { params: Params }) {
   try {
-    const id = params.id
+    const { id } = await params
 
     const category = await prisma.category.findUnique({
       where: { id },
@@ -34,9 +34,10 @@ export async function GET(request: NextRequest,{ params }: Params) {
   }
 }
 
-export async function PUT(request: NextRequest,context: Params ) {
+export async function PUT(request: NextRequest,{ params }: { params: Params } ) {
   try {
-    const id = context.params.id
+    const { id } = await params
+
     const body = await request.json()
 
     // Validate request data
@@ -88,9 +89,10 @@ export async function PUT(request: NextRequest,context: Params ) {
   }
 }
 
-export async function DELETE(request: NextRequest,context: Params ) {
+export async function DELETE(request: NextRequest,{ params }: { params: Params } ) {
   try {
-    const id = context.params.id
+    const { id } = await params
+
 
     // Check if the category exists
     const existingCategory = await prisma.category.findUnique({

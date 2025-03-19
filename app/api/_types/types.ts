@@ -1,5 +1,1 @@
-export interface Params {
-  params: {
-    id: string
-  }
-}
+export type Params = Promise<{id: string}>

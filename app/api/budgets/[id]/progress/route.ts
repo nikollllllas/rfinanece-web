@@ -14,9 +14,9 @@ import {
   endOfYear,
 } from "date-fns"
 
-export async function GET(request: NextRequest, { params }: Params) {
+export async function GET(request: NextRequest, { params }: { params: Params }) {
   try {
-    const id = params.id
+    const { id } = await params
 
     const budget = await prisma.budget.findUnique({
       where: { id },
