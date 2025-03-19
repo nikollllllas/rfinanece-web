@@ -24,23 +24,48 @@ import {
   Plus,
   Search,
   Loader2,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useCategories } from "@/hooks/use-categories";
 import type { Transaction } from "@/lib/api";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { TransactionEditDialog } from "@/components/transaction-edit-dialog";
 
 export default function TransactionsPage() {
-  const { transactions, isLoading, error } = useTransactions();
+  const {
+    transactions,
+    isLoading,
+    error,
+    removeTransaction,
+    refreshTransactions,
+  } = useTransactions();
   const { categories } = useCategories();
   const [filteredTransactions, setFilteredTransactions] = useState<
     Transaction[]
   >([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("AMBOS");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingTransactionId, setEditingTransactionId] = useState<
+    string | null
+  >(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Format currency in Brazilian Real
   const formatCurrency = (amount: number) => {
@@ -53,6 +78,11 @@ export default function TransactionsPage() {
   // Format date in Brazilian format
   const formatDate = (dateString: string) => {
     return new Intl.DateTimeFormat("pt-BR").format(new Date(dateString));
+  };
+
+  const handleTransactionChanged = () => {
+    refreshTransactions();
+    setRefreshKey((prev) => prev + 1);
   };
 
   // Filter and sort transactions
@@ -72,7 +102,7 @@ export default function TransactionsPage() {
     }
 
     // Apply type filter
-    if (typeFilter !== "all") {
+    if (typeFilter !== "AMBOS") {
       result = result.filter((t) => t.type === typeFilter);
     }
 
@@ -98,7 +128,14 @@ export default function TransactionsPage() {
     });
 
     setFilteredTransactions(result);
-  }, [transactions, searchQuery, typeFilter, categoryFilter, sortOrder]);
+  }, [
+    transactions,
+    searchQuery,
+    typeFilter,
+    categoryFilter,
+    sortOrder,
+    refreshKey,
+  ]);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -132,7 +169,7 @@ export default function TransactionsPage() {
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
               <Select
-                defaultValue="all"
+                defaultValue="AMBOS"
                 value={typeFilter}
                 onValueChange={setTypeFilter}
               >
@@ -140,9 +177,9 @@ export default function TransactionsPage() {
                   <SelectValue placeholder="Tipo de Transação" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todas as Transações</SelectItem>
-                  <SelectItem value="INCOME">GANHOs</SelectItem>
-                  <SelectItem value="EXPENSE">Gastos</SelectItem>
+                  <SelectItem value="AMBOS">Todas as Transações</SelectItem>
+                  <SelectItem value="GANHO">Ganhos</SelectItem>
+                  <SelectItem value="GASTO">Gastos</SelectItem>
                 </SelectContent>
               </Select>
               <Select
@@ -212,11 +249,12 @@ export default function TransactionsPage() {
                     <TableHead>Categoria</TableHead>
                     <TableHead>Data</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
+                    <TableHead className="w-[100px]">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredTransactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
+                    <TableRow key={`${transaction.id}-${refreshKey}`}>
                       <TableCell className="font-medium">
                         {transaction.description}
                       </TableCell>
@@ -241,9 +279,57 @@ export default function TransactionsPage() {
                                 : "text-red-600"
                             )}
                           >
-                            {transaction.type === "GANHO" ? "+" : ""}
+                            {transaction.type === "GANHO" ? "+" : "-"}
                             {formatCurrency(Number(transaction.amount))}
                           </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              setEditingTransactionId(transaction.id)
+                            }
+                          >
+                            <Pencil className="h-4 w-4" />
+                            <span className="sr-only">Editar</span>
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                <span className="sr-only">Excluir</span>
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Tem certeza?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta ação não pode ser desfeita. Isso excluirá
+                                  permanentemente esta transação.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() =>
+                                    removeTransaction(transaction.id)
+                                  }
+                                  className="bg-destructive text-destructive-foreground"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -254,6 +340,18 @@ export default function TransactionsPage() {
           )}
         </div>
       </main>
+
+      {/* Edit Dialog */}
+      {editingTransactionId && (
+        <TransactionEditDialog
+          transactionId={editingTransactionId}
+          open={!!editingTransactionId}
+          onOpenChange={(open) => {
+            if (!open) setEditingTransactionId(null);
+          }}
+          onSuccess={handleTransactionChanged}
+        />
+      )}
     </div>
   );
 }

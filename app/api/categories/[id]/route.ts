@@ -40,7 +40,6 @@ export async function PUT(request: NextRequest,{ params }: { params: Params } ) 
 
     const body = await request.json()
 
-    // Validate request data
     const validationResult = categoryUpdateSchema.safeParse(body)
 
     if (!validationResult.success) {

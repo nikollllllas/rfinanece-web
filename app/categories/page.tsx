@@ -20,12 +20,18 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { CategoryEditDialog } from "@/components/category-edit-dialog";
 
 export default function CategoriesPage() {
-  const { categories, isLoading, error, removeCategory } = useCategories();
+  const { categories, isLoading, error, removeCategory, refreshCategories } =
+    useCategories();
   const router = useRouter();
   const { toast } = useToast();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
+    null
+  );
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleDelete = async (id: string) => {
     try {
@@ -49,6 +55,12 @@ export default function CategoriesPage() {
     }
   };
 
+  const handleCategoryChanged = () => {
+    refreshCategories();
+    setRefreshKey((prev) => prev + 1);
+  };
+
+  // Get category type label
   const getCategoryTypeLabel = (type: string | undefined) => {
     switch (type) {
       case "GANHO":
@@ -144,7 +156,7 @@ export default function CategoriesPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {categories.map((category) => (
               <Card
-                key={category.id}
+                key={`${category.id}-${refreshKey}`}
                 className="overflow-hidden flex flex-col justify-between"
               >
                 <CardHeader className="pb-3 flex flex-row items-center justify-between">
@@ -161,11 +173,13 @@ export default function CategoriesPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex justify-end gap-2 mt-2">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/categories/${category.id}/edit`}>
-                        <Pencil className="h-4 w-4 mr-1" />
-                        Editar
-                      </Link>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setEditingCategoryId(category.id)}
+                    >
+                      <Pencil className="h-4 w-4 mr-1" />
+                      Editar
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -176,12 +190,12 @@ export default function CategoriesPage() {
                         >
                           {deletingId === category.id ? (
                             <>
-                              <Loader2 className="h-4 w-4  animate-spin" />
+                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                               Excluindo...
                             </>
                           ) : (
                             <>
-                              <Trash2 className="h-4 w-4 " />
+                              <Trash2 className="h-4 w-4" />
                             </>
                           )}
                         </Button>
@@ -235,6 +249,18 @@ export default function CategoriesPage() {
           </div>
         )}
       </main>
+
+      {/* Edit Dialog */}
+      {editingCategoryId && (
+        <CategoryEditDialog
+          categoryId={editingCategoryId}
+          open={!!editingCategoryId}
+          onOpenChange={(open) => {
+            if (!open) setEditingCategoryId(null);
+          }}
+          onSuccess={handleCategoryChanged}
+        />
+      )}
     </div>
   );
 }

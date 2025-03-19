@@ -4,15 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import {
-  BarChart3,
-  CreditCard,
-  Home,
-  PieChart,
-  Plus,
-  Settings,
-  Wallet,
-} from "lucide-react";
+import { CreditCard, Home, PieChart, Plus, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const routes = [

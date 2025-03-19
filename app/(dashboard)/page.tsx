@@ -14,6 +14,86 @@ import RecentTransactions from "@/components/recent-transactions";
 import BudgetProgress from "@/components/budget-progress";
 import ExpensesByCategory from "@/components/expenses-by-category";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getDashboardData } from "@/lib/api";
+
+async function DashboardData() {
+  const dashboardData = await getDashboardData();
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(amount);
+  };
+
+  const formatChange = (change: number) => {
+    const sign = change >= 0 ? "+" : "-";
+    return `${sign}${change.toFixed(1)}%`;
+  };
+
+  return (
+    <>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Saldo Total</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatCurrency(dashboardData.summary.balance)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {formatChange(dashboardData.summary.savings.change)} em relação ao
+              mês anterior
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Receitas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatCurrency(dashboardData.summary.income.amount)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {formatChange(dashboardData.summary.income.change)} em relação ao
+              mês anterior
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Despesas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatCurrency(dashboardData.summary.expenses.amount)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {formatChange(dashboardData.summary.expenses.change)} em relação
+              ao mês anterior
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Economia</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatCurrency(dashboardData.summary.savings.amount)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {formatChange(dashboardData.summary.savings.change)} em relação ao
+              mês anterior
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+}
 
 export default function Dashboard() {
   return (
@@ -34,52 +114,19 @@ export default function Dashboard() {
         </div>
       </header>
       <main className="flex-1 p-4 md:p-6 space-y-6">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Saldo Total</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">R$ 12.580,00</div>
-              <p className="text-xs text-muted-foreground">
-                +2,5% em relação ao mês anterior
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Ganhos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">R$ 4.200,00</div>
-              <p className="text-xs text-muted-foreground">
-                +5,2% em relação ao mês anterior
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Gastos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">R$ 2.640,00</div>
-              <p className="text-xs text-muted-foreground">
-                -1,8% em relação ao mês anterior
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Economia</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">R$ 1.560,00</div>
-              <p className="text-xs text-muted-foreground">
-                +12,3% em relação ao mês anterior
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <Suspense
+          fallback={
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Skeleton className="h-[100px]" />
+              <Skeleton className="h-[100px]" />
+              <Skeleton className="h-[100px]" />
+              <Skeleton className="h-[100px]" />
+            </div>
+          }
+        >
+          <DashboardData />
+        </Suspense>
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
           <Card className="lg:col-span-4">
             <CardHeader>
@@ -96,9 +143,9 @@ export default function Dashboard() {
           </Card>
           <Card className="lg:col-span-3">
             <CardHeader>
-              <CardTitle>Gastos por Categoria</CardTitle>
+              <CardTitle>Despesas por Categoria</CardTitle>
               <CardDescription>
-                Detalhamento das suas gastos mensais
+                Detalhamento das suas despesas mensais
               </CardDescription>
             </CardHeader>
             <CardContent>
