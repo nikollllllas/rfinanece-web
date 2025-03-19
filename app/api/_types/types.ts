@@ -1,4 +1,4 @@
-export interface RouteHandlerContext {
+export interface Params {
   params: {
     id: string
   }

@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { z } from "zod"
-import { RouteHandlerContext } from "../../_types/types"
+import { Params } from "../../_types/types"
 
 // Define validation schema for category updates
 const categoryUpdateSchema = z.object({
@@ -15,9 +15,9 @@ const categoryUpdateSchema = z.object({
   isDefault: z.boolean().optional(),
 })
 
-export async function GET(request: NextRequest,context: RouteHandlerContext) {
+export async function GET(request: NextRequest,{ params }: Params) {
   try {
-    const id = context.params.id
+    const id = params.id
 
     const category = await prisma.category.findUnique({
       where: { id },
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest,context: RouteHandlerContext) {
   }
 }
 
-export async function PUT(request: NextRequest,context: RouteHandlerContext ) {
+export async function PUT(request: NextRequest,context: Params ) {
   try {
     const id = context.params.id
     const body = await request.json()
@@ -88,7 +88,7 @@ export async function PUT(request: NextRequest,context: RouteHandlerContext ) {
   }
 }
 
-export async function DELETE(request: NextRequest,context: RouteHandlerContext ) {
+export async function DELETE(request: NextRequest,context: Params ) {
   try {
     const id = context.params.id
 

@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { z } from "zod"
-import { RouteHandlerContext } from "../../_types/types"
+import { Params } from "../../_types/types"
 
 const transactionUpdateSchema = z.object({
   description: z.string().min(1, "Insira uma descrição").optional(),
@@ -20,9 +20,9 @@ const transactionUpdateSchema = z.object({
   notes: z.string().optional().nullable(),
 })
 
-export async function GET(request: NextRequest,context: RouteHandlerContext) {
+export async function GET(request: NextRequest,{ params }: Params) {
   try {
-    const id = context.params.id
+    const id = params.id
 
     const transaction = await prisma.transaction.findUnique({
       where: { id },
@@ -42,9 +42,9 @@ export async function GET(request: NextRequest,context: RouteHandlerContext) {
   }
 }
 
-export async function PUT(request: NextRequest,context: RouteHandlerContext) {
+export async function PUT(request: NextRequest,{ params }: Params) {
   try {
-    const id = context.params.id
+    const id = params.id
     const body = await request.json()
 
     const validationResult = transactionUpdateSchema.safeParse(body)
@@ -88,9 +88,9 @@ export async function PUT(request: NextRequest,context: RouteHandlerContext) {
   }
 }
 
-export async function DELETE(request: NextRequest,context: RouteHandlerContext) {
+export async function DELETE(request: NextRequest,{ params }: Params) {
   try {
-    const id = context.params.id
+    const id = params.id
 
     const existingTransaction = await prisma.transaction.findUnique({
       where: { id },
