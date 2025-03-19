@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { z } from "zod"
-import { paramsProps } from "../../_types/types"
+import { RouteHandlerContext } from "../../_types/types"
 
 // Define validation schema for category updates
 const categoryUpdateSchema = z.object({
@@ -15,9 +15,9 @@ const categoryUpdateSchema = z.object({
   isDefault: z.boolean().optional(),
 })
 
-export async function GET(request: NextRequest, { params }: paramsProps ) {
+export async function GET(request: NextRequest,context: RouteHandlerContext) {
   try {
-    const id = params.id
+    const id = context.params.id
 
     const category = await prisma.category.findUnique({
       where: { id },
@@ -34,9 +34,9 @@ export async function GET(request: NextRequest, { params }: paramsProps ) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: paramsProps ) {
+export async function PUT(request: NextRequest,context: RouteHandlerContext ) {
   try {
-    const id = params.id
+    const id = context.params.id
     const body = await request.json()
 
     // Validate request data
@@ -88,9 +88,9 @@ export async function PUT(request: NextRequest, { params }: paramsProps ) {
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: paramsProps ) {
+export async function DELETE(request: NextRequest,context: RouteHandlerContext ) {
   try {
-    const id = params.id
+    const id = context.params.id
 
     // Check if the category exists
     const existingCategory = await prisma.category.findUnique({

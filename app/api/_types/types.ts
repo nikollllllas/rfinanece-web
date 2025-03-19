@@ -1,1 +1,5 @@
-export type paramsProps = { params: { id: string } }
+export interface RouteHandlerContext {
+  params: {
+    id: string
+  }
+}

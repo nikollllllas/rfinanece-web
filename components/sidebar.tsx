@@ -65,7 +65,7 @@ export default function Sidebar() {
           {!isCollapsed && (
             <Link href="/" className="flex items-center gap-2">
               <Wallet className="h-6 w-6 text-primary" />
-              <span className="font-bold text-xl">FinanceTrack</span>
+              <span className="font-bold text-xl">Rúbia 💖</span>
             </Link>
           )}
           {isCollapsed && <Wallet className="h-6 w-6 text-primary mx-auto" />}

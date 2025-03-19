@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
-import type { paramsProps } from "@/app/api/_types/types"
+import type { RouteHandlerContext } from "@/app/api/_types/types"
 import {
   startOfMonth,
   endOfMonth,
@@ -14,9 +14,9 @@ import {
   endOfYear,
 } from "date-fns"
 
-export async function GET(request: NextRequest, { params }: paramsProps) {
+export async function GET(request: NextRequest, context: RouteHandlerContext) {
   try {
-    const id = params.id
+    const id = context.params.id
 
     const budget = await prisma.budget.findUnique({
       where: { id },
