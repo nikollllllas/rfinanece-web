@@ -237,7 +237,8 @@ export async function deleteBudget(id: string): Promise<{ message: string }> {
 // ==================== DASHBOARD API FUNCTIONS ====================
 
 export async function getDashboardData(): Promise<DashboardData> {
-  const response = await fetch("/api/dashboard")
+  const url = process.env.NODE_ENV === 'production' ? "https://rfinance.vercel.app/api/dashboard" : "http://localhost:3000/api/dashboard"
+  const response = await fetch(url, { method: 'GET' })
   return handleResponse<DashboardData>(response)
 }
 
