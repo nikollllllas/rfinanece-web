@@ -10,13 +10,10 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Plus, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useBudgets } from "@/hooks/use-budget";
-import { useCategories } from "@/hooks/use-categories";
-import { Budget } from "@prisma/client";
+import { useBudgets, useBudgetProgress } from "@/hooks/use-budgets";
 
-export default function BudgetsPage() {
-  const { budgets, isLoading, error } = useBudgets();
-  const { categories } = useCategories();
+function BudgetCard({ budget }: { budget: any }) {
+  const { progress, isLoading, error } = useBudgetProgress(budget.id);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -29,41 +26,112 @@ export default function BudgetsPage() {
     return new Intl.DateTimeFormat("pt-BR").format(new Date(dateString));
   };
 
-  const getCategoryName = (categoryId: string) => {
-    const category = categories.find((c) => c.id === categoryId);
-    return category?.name || "Sem categoria";
-  };
-
-  const getCategoryColor = (categoryId: string) => {
-    const category = categories.find((c) => c.id === categoryId);
-    return category?.color || "#000000";
-  };
-
   const formatPeriod = (period: string) => {
     const periods: Record<string, string> = {
-      DIÁRIO: "Diário",
-      SEMANAL: "Semanal",
-      MENSAL: "Mensal",
-      QUARTENAL: "Trimestral",
-      ANUAL: "Anual",
-      PERSONALIZADO: "Personalizado",
+      DAILY: "Diário",
+      WEEKLY: "Semanal",
+      MONTHLY: "Mensal",
+      QUARTERLY: "Trimestral",
+      YEARLY: "Anual",
+      CUSTOM: "Personalizado",
     };
     return periods[period] || period;
   };
 
-  const calculateProgress = (budget: any) => {
-    // In a real app, you would calculate this based on actual transactions
-    // For now, we'll use a random value between 0 and 150% of the budget
-    const current = Math.random() * Number(budget.amount) * 1.5;
-    return {
-      current,
-      percentage: Math.min(
-        Math.round((current / Number(budget.amount)) * 100),
-        100
-      ),
-      isOverBudget: current > Number(budget.amount),
-    };
-  };
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-lg">
+              {budget.category?.name || "Carregando..."}
+            </CardTitle>
+            <span className="text-sm font-medium">...</span>
+          </div>
+          <CardDescription>
+            {formatCurrency(Number(budget.amount))} •{" "}
+            {formatPeriod(budget.period)}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center items-center py-4">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">
+            {budget.category?.name || "Erro"}
+          </CardTitle>
+          <CardDescription>
+            {formatCurrency(Number(budget.amount))} •{" "}
+            {formatPeriod(budget.period)}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm text-destructive">
+            Erro ao carregar progresso
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const { percentage, isOverBudget } = progress;
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-lg">{budget.category?.name}</CardTitle>
+          <span
+            className={`text-sm font-medium ${
+              isOverBudget ? "text-red-500" : ""
+            }`}
+          >
+            {percentage}%
+          </span>
+        </div>
+        <CardDescription>
+          {formatCurrency(Number(budget.amount))} •{" "}
+          {formatPeriod(budget.period)}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Progress
+          value={percentage}
+          className={`h-2 ${isOverBudget ? "bg-red-100" : "bg-gray-100"}`}
+          indicatorClassName={
+            isOverBudget ? "bg-red-500" : budget.category?.color
+          }
+        />
+        <div className="mt-2 text-xs text-muted-foreground flex justify-between">
+          <span>
+            Válido a partir de: {formatDate(budget.startDate.toString())}
+          </span>
+          {isOverBudget && (
+            <span className="text-red-500">Acima do orçamento</span>
+          )}
+        </div>
+        <div className="mt-1 text-sm">
+          <span className={isOverBudget ? "text-red-500 font-medium" : ""}>
+            {formatCurrency(progress.current)} /{" "}
+            {formatCurrency(Number(budget.amount))}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function BudgetsPage() {
+  const { budgets, isLoading, error } = useBudgets();
 
   if (isLoading) {
     return (
@@ -131,56 +199,9 @@ export default function BudgetsPage() {
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {budgets.map((budget) => {
-              const progress = calculateProgress(budget);
-              const isOverBudget = progress.isOverBudget;
-              const percentage = progress.percentage;
-
-              return (
-                <Card key={budget.id}>
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-lg">
-                        {getCategoryName(budget.categoryId)}
-                      </CardTitle>
-                      <span
-                        className={`text-sm font-medium ${
-                          isOverBudget ? "text-red-500" : ""
-                        }`}
-                      >
-                        {percentage}%
-                      </span>
-                    </div>
-                    <CardDescription>
-                      {formatCurrency(Number(budget.amount))} •{" "}
-                      {formatPeriod(budget.period)}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Progress
-                      value={percentage}
-                      className={`h-2 ${
-                        isOverBudget ? "bg-red-100" : "bg-gray-100"
-                      }`}
-                      indicatorClassName={
-                        isOverBudget
-                          ? "bg-red-500"
-                          : getCategoryColor(budget.categoryId)
-                      }
-                    />
-                    <div className="mt-2 text-xs text-muted-foreground flex justify-between">
-                      <span>
-                        Válido a partir de:{" "}
-                        {formatDate(budget.startDate.toString())}
-                      </span>
-                      {isOverBudget && (
-                        <span className="text-red-500">Acima do orçamento</span>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+            {budgets.map((budget) => (
+              <BudgetCard key={budget.id} budget={budget} />
+            ))}
 
             <Card className="flex flex-col items-center justify-center p-6 border-dashed">
               <Button asChild variant="outline" className="h-auto p-8 w-full">
@@ -189,9 +210,11 @@ export default function BudgetsPage() {
                   className="flex flex-col items-center gap-2"
                 >
                   <Plus className="h-6 w-6" />
-                  <span className="text-lg font-medium">Novo Orçamento</span>
+                  <span className="text-lg font-medium">
+                    Adicionar Novo Orçamento
+                  </span>
                   <span className="text-sm text-muted-foreground text-center">
-                    Crie um novo orçamento
+                    Crie um novo orçamento para controlar seus gastos
                   </span>
                 </Link>
               </Button>

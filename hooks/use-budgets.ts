@@ -115,3 +115,41 @@ export function useBudgets() {
   }
 }
 
+export function useBudgetProgress(budgetId: string) {
+  const [progress, setProgress] = useState<{ current: number; percentage: number; isOverBudget: boolean }>({
+    current: 0,
+    percentage: 0,
+    isOverBudget: false,
+  })
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+
+  useEffect(() => {
+    async function fetchBudgetProgress() {
+      setIsLoading(true)
+      try {
+        const response = await fetch(`/api/budgets/${budgetId}/progress`)
+        if (!response.ok) {
+          throw new Error("Failed to fetch budget progress")
+        }
+        const data = await response.json()
+        setProgress({
+          current: data.current,
+          percentage: Math.min(Math.round((data.current / data.max) * 100), 100),
+          isOverBudget: data.current > data.max,
+        })
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error("An unknown error occurred"))
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (budgetId) {
+      fetchBudgetProgress()
+    }
+  }, [budgetId])
+
+  return { progress, isLoading, error }
+}
+

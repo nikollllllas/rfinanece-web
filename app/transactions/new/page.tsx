@@ -34,7 +34,7 @@ export default function NewTransactionPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { categories, isLoading: categoriesLoading } = useCategories();
-  const [transactionType, setTransactionType] = useState("GANHO");
+  const [transactionType, setTransactionType] = useState("GASTO");
   const [date, setDate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(false);
 

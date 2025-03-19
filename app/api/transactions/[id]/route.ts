@@ -20,9 +20,8 @@ const transactionUpdateSchema = z.object({
   notes: z.string().optional().nullable(),
 })
 
-export async function GET(request: NextRequest, props: { params: paramsProps }) {
+export async function GET(request: NextRequest, { params }: paramsProps) {
   try {
-    const { params } = await props.params
     const id = params.id
 
     const transaction = await prisma.transaction.findUnique({
@@ -43,9 +42,8 @@ export async function GET(request: NextRequest, props: { params: paramsProps }) 
   }
 }
 
-export async function PUT(request: NextRequest, props: { params: paramsProps }) {
+export async function PUT(request: NextRequest, { params }: paramsProps) {
   try {
-    const { params } = await props.params
     const id = params.id
     const body = await request.json()
 
@@ -90,9 +88,8 @@ export async function PUT(request: NextRequest, props: { params: paramsProps }) 
   }
 }
 
-export async function DELETE(request: NextRequest, props: { params: paramsProps }) {
+export async function DELETE(request: NextRequest, { params }: paramsProps) {
   try {
-    const { params } = await props.params
     const id = params.id
 
     const existingTransaction = await prisma.transaction.findUnique({

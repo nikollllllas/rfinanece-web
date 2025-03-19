@@ -71,7 +71,7 @@ export default function FinancialOverview() {
         />
         <Legend
           payload={[
-            { value: "GANHOs", type: "line", color: "#8884d8" },
+            { value: "Ganhos", type: "line", color: "#8884d8" },
             { value: "Gastos", type: "line", color: "#ff7300" },
             { value: "Economia", type: "line", color: "#82ca9d" },
           ]}
@@ -79,7 +79,7 @@ export default function FinancialOverview() {
         <Line
           type="monotone"
           dataKey="income"
-          name="GANHOs"
+          name="Ganhos"
           stroke="#8884d8"
           activeDot={{ r: 8 }}
         />
