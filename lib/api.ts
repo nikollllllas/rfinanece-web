@@ -7,6 +7,7 @@ export interface TransactionData {
   type: TransactionType
   categoryId: string
   notes?: string
+  tag?: "FALTA" | "PAGO" | "DEVOLVER" | "ECONOMIA" | null
 }
 
 export interface Transaction extends TransactionData {
@@ -236,8 +237,8 @@ export async function deleteBudget(id: string): Promise<{ message: string }> {
 
 // ==================== DASHBOARD API FUNCTIONS ====================
 
-export async function getDashboardData(): Promise<DashboardData> {
-  const url = process.env.NODE_ENV === 'production' ? "https://rfinance.vercel.app/api/dashboard" : "http://localhost:3000/api/dashboard"
+export async function getDashboardData(queryParams = ""): Promise<DashboardData> {
+  const url = process.env.NODE_ENV === 'production' ? `https://rfinance.vercel.app/api/dashboard${queryParams}` : `http://localhost:3000/api/dashboard${queryParams}`
   const response = await fetch(url, { method: 'GET' })
   return handleResponse<DashboardData>(response)
 }

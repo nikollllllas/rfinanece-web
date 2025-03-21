@@ -2,6 +2,7 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 interface TransactionEditDialogProps {
   transactionId: string;
@@ -49,7 +51,6 @@ export function TransactionEditDialog({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Form state
   const [transactionType, setTransactionType] = useState<"GANHO" | "GASTO">(
     "GASTO"
   );
@@ -58,8 +59,10 @@ export function TransactionEditDialog({
   const [date, setDate] = useState<Date>(new Date());
   const [categoryId, setCategoryId] = useState("");
   const [notes, setNotes] = useState("");
+  const [tag, setTag] = useState<
+    "FALTA" | "PAGO" | "DEVOLVER" | "ECONOMIA" | null
+  >(null);
 
-  // Load transaction data
   useEffect(() => {
     if (!open || !transactionId) return;
 
@@ -76,6 +79,7 @@ export function TransactionEditDialog({
         setDate(new Date(data.date));
         setCategoryId(data.categoryId);
         setNotes(data.notes || "");
+        setTag(data.tag || null);
       } catch (err) {
         setError(
           err instanceof Error ? err : new Error("Falha ao carregar transação")
@@ -120,6 +124,7 @@ export function TransactionEditDialog({
         type: transactionType,
         categoryId,
         notes: notes || undefined,
+        tag: tag || null,
       };
 
       await updateTransaction(transactionId, transactionData);
@@ -143,6 +148,22 @@ export function TransactionEditDialog({
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Get tag badge variant
+  const getTagVariant = (tag: string | null) => {
+    switch (tag) {
+      case "FALTA":
+        return "destructive";
+      case "PAGO":
+        return "success";
+      case "DEVOLVER":
+        return "warning";
+      case "ECONOMIA":
+        return "success";
+      default:
+        return "outline";
     }
   };
 
@@ -265,6 +286,40 @@ export function TransactionEditDialog({
                         Nenhuma categoria disponível
                       </SelectItem>
                     )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tag">Tag</Label>
+                <Select
+                  name="tag"
+                  value={tag || ""}
+                  onValueChange={(value) =>
+                    setTag(
+                      value === ""
+                        ? null
+                        : (value as "FALTA" | "PAGO" | "DEVOLVER" | "ECONOMIA")
+                    )
+                  }
+                >
+                  <SelectTrigger id="tag">
+                    <SelectValue placeholder="Selecione uma tag (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NONE">Nenhum</SelectItem>
+                    <SelectItem value="FALTA">
+                      <Badge variant="destructive">Falta</Badge>
+                    </SelectItem>
+                    <SelectItem value="PAGO">
+                      <Badge variant="success">Pago</Badge>
+                    </SelectItem>
+                    <SelectItem value="DEVOLVER">
+                      <Badge variant="warning">Devolver</Badge>
+                    </SelectItem>
+                    <SelectItem value="ECONOMIA">
+                      <Badge variant="success">Economia</Badge>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>

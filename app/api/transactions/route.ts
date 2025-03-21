@@ -15,6 +15,7 @@ const transactionSchema = z.object({
   type: z.enum(["GANHO", "GASTO"]),
   categoryId: z.string().uuid("Categoria inválida"),
   notes: z.string().optional(),
+  tag: z.enum(["FALTA", "PAGO", "DEVOLVER", "ECONOMIA"]).nullable().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -37,8 +38,7 @@ export async function POST(request: NextRequest) {
     if (!category) {
       return NextResponse.json({ error: "Categoria não encontrada" }, { status: 404 })
     }
-
-    // Create the transaction
+    
     const transaction = await prisma.transaction.create({
       data: {
         description: data.description,
@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
         type: data.type,
         categoryId: data.categoryId,
         notes: data.notes,
+        tag: data.tag,
       },
     })
 

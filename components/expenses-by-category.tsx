@@ -10,7 +10,7 @@ import {
   Tooltip,
 } from "recharts";
 import { Loader2 } from "lucide-react";
-import { useDashboard } from "@/hooks/use-dashboard";
+import { useDashboard } from "@/components/dashboard-provider";
 
 export default function ExpensesByCategory() {
   const [mounted, setMounted] = useState(false);
@@ -41,7 +41,6 @@ export default function ExpensesByCategory() {
     );
   }
 
-  // Format currency for tooltip
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -49,7 +48,6 @@ export default function ExpensesByCategory() {
     }).format(value);
   };
 
-  // If no expense data is available
   if (dashboardData.expensesByCategory.length === 0) {
     return (
       <div className="flex justify-center items-center h-[300px]">

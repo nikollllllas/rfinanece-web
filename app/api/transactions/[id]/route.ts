@@ -18,6 +18,7 @@ const transactionUpdateSchema = z.object({
   type: z.enum(["GANHO", "GASTO"]).optional(),
   categoryId: z.string().uuid("Categoria inválida").optional(),
   notes: z.string().optional().nullable(),
+  tag: z.enum(["FALTA", "PAGO", "DEVOLVER", "ECONOMIA"]).nullable().optional(),
 })
 
 export async function GET(request: NextRequest,{ params }: { params: Params }) {

@@ -2,10 +2,10 @@
 
 import { ArrowDownIcon, ArrowUpIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useTransactions } from "@/hooks/use-transactions";
+import { useDashboard } from "@/components/dashboard-provider";
 
 export default function RecentTransactions() {
-  const { transactions, isLoading, error } = useTransactions();
+  const { dashboardData, isLoading, error } = useDashboard();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -27,7 +27,7 @@ export default function RecentTransactions() {
     );
   }
 
-  if (error) {
+  if (error || !dashboardData) {
     return (
       <div className="p-4 text-center">
         <p className="text-destructive">Erro ao carregar transações.</p>
@@ -35,9 +35,7 @@ export default function RecentTransactions() {
     );
   }
 
-  const recentTransactions = transactions
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5);
+  const recentTransactions = dashboardData.recentTransactions;
 
   if (recentTransactions.length === 0) {
     return (

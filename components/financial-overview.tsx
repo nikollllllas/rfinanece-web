@@ -12,7 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Loader2 } from "lucide-react";
-import { useDashboard } from "@/hooks/use-dashboard";
+import { useDashboard } from "@/components/dashboard-provider";
 
 export default function FinancialOverview() {
   const [mounted, setMounted] = useState(false);
@@ -43,7 +43,6 @@ export default function FinancialOverview() {
     );
   }
 
-  // Format currency for tooltip
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",

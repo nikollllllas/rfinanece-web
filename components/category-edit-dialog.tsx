@@ -203,8 +203,8 @@ export function CategoryEditDialog({
                     <SelectValue placeholder="Selecione um tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="GANHO">Receita</SelectItem>
-                    <SelectItem value="GASTO">Despesa</SelectItem>
+                    <SelectItem value="GANHO">Ganho</SelectItem>
+                    <SelectItem value="GASTO">Gasto</SelectItem>
                     <SelectItem value="AMBOS">Ambos</SelectItem>
                   </SelectContent>
                 </Select>

@@ -44,6 +44,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { TransactionEditDialog } from "@/components/transaction-edit-dialog";
+import { Badge } from "@/components/ui/badge";
+import { TransactionCreateDialog } from "@/components/transaction-create-dialog";
+import { InlineTagEditor } from "@/components/inline-tag-editor";
 
 export default function TransactionsPage() {
   const {
@@ -61,13 +64,13 @@ export default function TransactionsPage() {
   const [typeFilter, setTypeFilter] = useState("AMBOS");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [tagFilter, setTagFilter] = useState("all");
   const [editingTransactionId, setEditingTransactionId] = useState<
     string | null
   >(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Format currency in Brazilian Real
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -75,7 +78,6 @@ export default function TransactionsPage() {
     }).format(amount);
   };
 
-  // Format date in Brazilian format
   const formatDate = (dateString: string) => {
     return new Intl.DateTimeFormat("pt-BR").format(new Date(dateString));
   };
@@ -85,13 +87,11 @@ export default function TransactionsPage() {
     setRefreshKey((prev) => prev + 1);
   };
 
-  // Filter and sort transactions
   useEffect(() => {
     if (!transactions) return;
 
     let result = [...transactions];
 
-    // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
@@ -101,17 +101,22 @@ export default function TransactionsPage() {
       );
     }
 
-    // Apply type filter
     if (typeFilter !== "AMBOS") {
       result = result.filter((t) => t.type === typeFilter);
     }
 
-    // Apply category filter
     if (categoryFilter !== "all") {
       result = result.filter((t) => t.categoryId === categoryFilter);
     }
 
-    // Apply sorting
+    if (tagFilter !== "all") {
+      if (tagFilter === "none") {
+        result = result.filter((t) => !t.tag);
+      } else {
+        result = result.filter((t) => t.tag === tagFilter);
+      }
+    }
+
     result.sort((a, b) => {
       switch (sortOrder) {
         case "newest":
@@ -133,6 +138,7 @@ export default function TransactionsPage() {
     searchQuery,
     typeFilter,
     categoryFilter,
+    tagFilter,
     sortOrder,
     refreshKey,
   ]);
@@ -145,11 +151,8 @@ export default function TransactionsPage() {
             <span className="text-lg">Transações</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Button asChild size="sm">
-              <Link href="/transactions/new">
-                <Plus className="mr-1 h-4 w-4" />
-                Nova Transação
-              </Link>
+            <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
+              Nova Transação
             </Button>
           </div>
         </div>
@@ -200,6 +203,23 @@ export default function TransactionsPage() {
                 </SelectContent>
               </Select>
               <Select
+                defaultValue="all"
+                value={tagFilter}
+                onValueChange={setTagFilter}
+              >
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Status</SelectItem>
+                  <SelectItem value="none">Sem Status</SelectItem>
+                  <SelectItem value="FALTA">Falta</SelectItem>
+                  <SelectItem value="PAGO">Pago</SelectItem>
+                  <SelectItem value="DEVOLVER">Devolver</SelectItem>
+                  <SelectItem value="ECONOMIA">Economia</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
                 defaultValue="newest"
                 value={sortOrder}
                 onValueChange={setSortOrder}
@@ -233,11 +253,8 @@ export default function TransactionsPage() {
               <p className="text-muted-foreground mb-4">
                 Nenhuma transação encontrada.
               </p>
-              <Button asChild>
-                <Link href="/transactions/new">
-                  <Plus className="mr-1 h-4 w-4" />
-                  Adicionar Nova Transação
-                </Link>
+              <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
+                Adicionar Nova Transação
               </Button>
             </div>
           ) : (
@@ -248,6 +265,7 @@ export default function TransactionsPage() {
                     <TableHead>Descrição</TableHead>
                     <TableHead>Categoria</TableHead>
                     <TableHead>Data</TableHead>
+                    <TableHead>Tag</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
                     <TableHead className="w-[100px]">Ações</TableHead>
                   </TableRow>
@@ -263,6 +281,13 @@ export default function TransactionsPage() {
                       </TableCell>
                       <TableCell>
                         {formatDate(transaction.date.toString())}
+                      </TableCell>
+                      <TableCell>
+                        <InlineTagEditor
+                          transactionId={transaction.id}
+                          currentTag={transaction.tag ?? null}
+                          onSuccess={handleTransactionChanged}
+                        />
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -352,6 +377,12 @@ export default function TransactionsPage() {
           onSuccess={handleTransactionChanged}
         />
       )}
+
+      <TransactionCreateDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSuccess={handleTransactionChanged}
+      />
     </div>
   );
 }

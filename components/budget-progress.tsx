@@ -2,12 +2,11 @@
 
 import { Progress } from "@/components/ui/progress";
 import { Loader2 } from "lucide-react";
-import { useDashboard } from "@/hooks/use-dashboard";
+import { useDashboard } from "@/components/dashboard-provider";
 
 export default function BudgetProgress() {
   const { dashboardData, isLoading, error } = useDashboard();
 
-  // Format currency in Brazilian Real
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
