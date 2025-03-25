@@ -41,7 +41,6 @@ export function TransactionCreateDialog({
   onOpenChange,
   onSuccess,
 }: TransactionCreateDialogProps) {
-  const router = useRouter();
   const { toast } = useToast();
   const { categories, isLoading: categoriesLoading } = useCategories();
 
