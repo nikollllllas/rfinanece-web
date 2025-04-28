@@ -176,7 +176,7 @@ export default function TransactionsPage() {
                 value={typeFilter}
                 onValueChange={setTypeFilter}
               >
-                <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectTrigger className="w-full sm:w-[190px]">
                   <SelectValue placeholder="Tipo de Transação" />
                 </SelectTrigger>
                 <SelectContent>
@@ -185,7 +185,7 @@ export default function TransactionsPage() {
                   <SelectItem value="GASTO">Gastos</SelectItem>
                 </SelectContent>
               </Select>
-              <Select
+              {/*<Select
                 defaultValue="all"
                 value={categoryFilter}
                 onValueChange={setCategoryFilter}
@@ -201,7 +201,7 @@ export default function TransactionsPage() {
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
+              </Select>*/}
               <Select
                 defaultValue="all"
                 value={tagFilter}

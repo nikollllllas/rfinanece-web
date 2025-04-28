@@ -15,7 +15,7 @@ export function DashboardSummary() {
   };
 
   const formatChange = (change: number) => {
-    const sign = change >= 0 ? "+" : "-";
+    const sign = change >= 0 ? "+" : "";
     return `${sign}${change.toFixed(1)}%`;
   };
 

@@ -1,13 +1,14 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { CreditCard, Home, PieChart, Plus, Wallet } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useMediaQuery } from "@/hooks/use-mobile";
-import { TransactionCreateDialog } from "./transaction-create-dialog";
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
+import { BarChart3, CreditCard, Home, PieChart, Plus, Settings, Wallet } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useMediaQuery } from "@/hooks/use-mobile"
+import { TransactionCreateDialog } from "@/components/transaction-create-dialog"
+import { BudgetCreateDialog } from "@/components/budget-create-dialog"
 
 const routes = [
   {
@@ -32,46 +33,44 @@ const routes = [
     label: "Categorias",
     icon: PieChart,
     href: "/categories",
-    color: "text-green-500",
+    color: "text-emerald-500",
   },
-];
+]
 
 export default function Sidebar() {
-  const pathname = usePathname();
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const pathname = usePathname()
+  const isMobile = useMediaQuery("(max-width: 768px)")
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isBudgetDialogOpen, setBudgetDialogOpen] = useState(false)
 
   useEffect(() => {
-    const savedState = localStorage.getItem("sidebarCollapsed");
+    const savedState = localStorage.getItem("sidebarCollapsed")
     if (isMobile) {
-      setIsCollapsed(false);
+      setIsCollapsed(false)
     } else if (savedState !== null) {
-      setIsCollapsed(JSON.parse(savedState));
+      setIsCollapsed(JSON.parse(savedState))
     }
-  }, [isMobile]);
+  }, [isMobile])
 
   const toggleSidebar = () => {
-    const newState = !isCollapsed;
-    setIsCollapsed(newState);
+    const newState = !isCollapsed
+    setIsCollapsed(newState)
     if (!isMobile) {
-      localStorage.setItem("sidebarCollapsed", JSON.stringify(newState));
+      localStorage.setItem("sidebarCollapsed", JSON.stringify(newState))
     }
-  };
+  }
 
   useEffect(() => {
-    document.documentElement.style.setProperty(
-      "--sidebar-width",
-      isCollapsed ? "64px" : "256px"
-    );
-  }, [isCollapsed]);
+    document.documentElement.style.setProperty("--sidebar-width", isCollapsed ? "64px" : "256px")
+  }, [isCollapsed])
 
   return (
     <>
       <div
         className={cn(
           "fixed top-0 left-0 h-screen border-r bg-background z-30 transition-all duration-300",
-          isCollapsed ? "w-16" : "w-64"
+          isCollapsed ? "w-16" : "w-64",
         )}
       >
         <div className="flex flex-col h-full p-4">
@@ -88,9 +87,7 @@ export default function Sidebar() {
               size="icon"
               onClick={toggleSidebar}
               className="ml-auto"
-              aria-label={
-                isCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"
-              }
+              aria-label={isCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -102,10 +99,7 @@ export default function Sidebar() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className={cn(
-                  "h-4 w-4 transition-transform",
-                  isCollapsed ? "rotate-180" : "rotate-0"
-                )}
+                className={cn("h-4 w-4 transition-transform", isCollapsed ? "rotate-180" : "rotate-0")}
               >
                 <path d="m15 6-6 6 6 6" />
               </svg>
@@ -119,10 +113,8 @@ export default function Sidebar() {
                 href={route.href}
                 className={cn(
                   "flex items-center py-3 px-3 text-sm font-medium rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground",
-                  pathname === route.href
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground",
-                  isCollapsed && "justify-center px-0"
+                  pathname === route.href ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+                  isCollapsed && "justify-center px-0",
                 )}
               >
                 <route.icon className={cn("h-5 w-5", route.color)} />
@@ -133,10 +125,7 @@ export default function Sidebar() {
 
           <div className="mt-auto">
             <Button
-              className={cn(
-                "w-full justify-start",
-                isCollapsed && "justify-center px-0"
-              )}
+              className={cn("w-full justify-start", isCollapsed && "justify-center px-0")}
               onClick={() => setIsCreateDialogOpen(true)}
             >
               <Plus className="h-4 w-4" />
@@ -150,9 +139,17 @@ export default function Sidebar() {
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
         onSuccess={() => {
-          window.location.reload();
+          window.location.reload()
+        }}
+      />
+
+      <BudgetCreateDialog
+        open={isBudgetDialogOpen}
+        onOpenChange={setBudgetDialogOpen}
+        onSuccess={() => {
+          window.location.reload()
         }}
       />
     </>
-  );
+  )
 }
