@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DatePicker } from "@/components/ui/date-picker";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories } from "@/hooks/use-categories";
@@ -26,6 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { MonthPicker } from "./ui/monthpicker";
 
 interface BudgetEditDialogProps {
   budgetId: string;
@@ -49,15 +49,10 @@ export function BudgetEditDialog({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Form state
-  const [amount, setAmount] = useState("");
-  const [period, setPeriod] = useState<string>("MENSAL");
-  const [categoryId, setCategoryId] = useState("");
-  const [startDate, setStartDate] = useState<Date>(new Date());
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [showEndDate, setShowEndDate] = useState(false);
+  const [amount, setAmount] = useState("")
+  const [budgetMonth, setBudgetMonth] = useState<string>()
+  const [categoryId, setCategoryId] = useState("")
 
-  // Load budget data
   useEffect(() => {
     if (!open || !budgetId) return;
 
@@ -67,19 +62,9 @@ export function BudgetEditDialog({
         const data = await getBudget(budgetId);
         setBudget(data);
 
-        // Set form values
         setAmount(String(data.amount));
-        setPeriod(data.period);
+        setBudgetMonth(data.budgetMonth);
         setCategoryId(data.categoryId);
-        setStartDate(new Date(data.startDate));
-
-        if (data.endDate) {
-          setEndDate(new Date(data.endDate));
-          setShowEndDate(true);
-        }
-
-        // Show end date field if period is CUSTOM
-        setShowEndDate(data.period === "PERSONALIZADO");
       } catch (err) {
         setError(
           err instanceof Error ? err : new Error("Falha ao carregar orçamento")
@@ -98,15 +83,15 @@ export function BudgetEditDialog({
     loadBudget();
   }, [budgetId, open, toast, onOpenChange]);
 
-  // Filter to only expense categories
   const expenseCategories = categories.filter(
     (category) => category.type === "GASTO" || category.type === "AMBOS"
   );
 
-  const handlePeriodChange = (value: string) => {
-    setPeriod(value);
-    setShowEndDate(value === "PERSONALIZADO");
-  };
+  const formatMonthDisplay = (monthValue: string) => {
+    const [year, month] = monthValue.split('-')
+    const date = new Date(parseInt(year), parseInt(month) - 1)
+    return date.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long' })
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -125,9 +110,7 @@ export function BudgetEditDialog({
     try {
       const budgetData = {
         amount: Number.parseFloat(amount),
-        period: period as any,
-        startDate: startDate.toISOString(),
-        endDate: showEndDate && endDate ? endDate.toISOString() : null,
+        budgetMonth: budgetMonth?.slice(0, 7),
         categoryId,
       };
 
@@ -233,53 +216,12 @@ export function BudgetEditDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="period">Período</Label>
-                <Select
-                  required
-                  name="period"
-                  value={period}
-                  onValueChange={handlePeriodChange}
-                >
-                  <SelectTrigger id="period">
-                    <SelectValue placeholder="Selecione um período" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="DIÁRIO">Diário</SelectItem>
-                    <SelectItem value="SEMANAL">Semanal</SelectItem>
-                    <SelectItem value="MENSAL">Mensal</SelectItem>
-                    <SelectItem value="QUARTENAL">Trimestral</SelectItem>
-                    <SelectItem value="ANUAL">Anual</SelectItem>
-                    <SelectItem value="PERSONALIZADO">Personalizado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="startDate">Data de Início</Label>
-                <DatePicker
-                  date={startDate}
-                  setDate={(newDate) => newDate && setStartDate(newDate)}
-                />
-                <input
-                  type="hidden"
-                  name="startDate"
-                  value={startDate.toISOString()}
+                <Label htmlFor="budgetMonth">Mês do Orçamento</Label>
+                <MonthPicker
+                  selectedMonth={budgetMonth ? new Date(budgetMonth) : undefined}
+                  onMonthSelect={(newMonth) => setBudgetMonth(newMonth.toISOString())}
                 />
               </div>
-
-              {showEndDate && (
-                <div className="space-y-2">
-                  <Label htmlFor="endDate">Data de Término</Label>
-                  <DatePicker date={endDate} setDate={setEndDate} />
-                  {endDate && (
-                    <input
-                      type="hidden"
-                      name="endDate"
-                      value={endDate.toISOString()}
-                    />
-                  )}
-                </div>
-              )}
             </div>
             <DialogFooter>
               <Button

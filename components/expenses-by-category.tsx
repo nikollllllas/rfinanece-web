@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   PieChart,
   Pie,
@@ -10,19 +9,16 @@ import {
   Tooltip,
 } from "recharts";
 import { Loader2 } from "lucide-react";
-import { useDashboard } from "@/components/dashboard-provider";
+import { DashboardData } from "@/lib/api";
+import { formatCurrency } from "@/lib/utils";
 
-export default function ExpensesByCategory() {
-  const [mounted, setMounted] = useState(false);
-  const { dashboardData, isLoading, error } = useDashboard();
+interface ExpensesByCategoryProps {
+  dashboardData: DashboardData | null;
+  isLoading: boolean;
+  error: Error | null;
+}
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null;
-  }
+export default function ExpensesByCategory({dashboardData, isLoading, error}: ExpensesByCategoryProps) {
 
   if (isLoading) {
     return (
@@ -40,13 +36,6 @@ export default function ExpensesByCategory() {
       </div>
     );
   }
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
 
   if (dashboardData.expensesByCategory.length === 0) {
     return (

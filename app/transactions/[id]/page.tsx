@@ -14,7 +14,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Pencil, Trash2, Loader2 } from "lucide-react";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { getTransaction, deleteTransaction } from "@/lib/api";
 import { useCategories } from "@/hooks/use-categories";
@@ -99,14 +99,6 @@ export default function TransactionDetailsPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(amount);
-  };
-
-  // Find category
   const category = transaction?.categoryId
     ? categories.find((c) => c.id === transaction.categoryId)
     : null;

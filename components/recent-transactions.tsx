@@ -1,23 +1,16 @@
 "use client";
 
 import { ArrowDownIcon, ArrowUpIcon, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useDashboard } from "@/components/dashboard-provider";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
+import { DashboardData } from "@/lib/api";
 
-export default function RecentTransactions() {
-  const { dashboardData, isLoading, error } = useDashboard();
+interface RecentTransactionsProps {
+  dashboardData: DashboardData | null;
+  isLoading: boolean;
+  error: Error | null;
+}
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Intl.DateTimeFormat("pt-BR").format(new Date(dateString));
-  };
-
+export default function RecentTransactions({dashboardData, isLoading, error}: RecentTransactionsProps) {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">

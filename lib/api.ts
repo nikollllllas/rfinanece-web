@@ -1,4 +1,4 @@
-import type { TransactionType, CategoryType, BudgetPeriod } from "@prisma/client"
+import type { TransactionType, CategoryType } from "@prisma/client"
 
 export interface TransactionData {
   description: string
@@ -31,12 +31,9 @@ export interface Category extends CategoryData {
   updatedAt: string
 }
 
-// Budget Types
 export interface BudgetData {
   amount: number
-  period: BudgetPeriod
-  startDate: Date | string
-  endDate?: Date | string | null
+  budgetMonth: string
   categoryId: string
 }
 
@@ -233,6 +230,21 @@ export async function deleteBudget(id: string): Promise<{ message: string }> {
   })
 
   return handleResponse<{ message: string }>(response)
+}
+
+export async function replicateBudgets(targetMonth: string): Promise<{ message: string; budgets: Budget[] }> {
+  const response = await fetch("/api/budgets", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      action: "replicate",
+      targetMonth,
+    }),
+  })
+
+  return handleResponse<{ message: string; budgets: Budget[] }>(response)
 }
 
 // ==================== DASHBOARD API FUNCTIONS ====================

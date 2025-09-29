@@ -27,9 +27,10 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { useTransactions } from "@/hooks/use-transactions";
+import { Skeleton } from "@/components/ui/skeleton"
+import { cn, formatCurrency, formatDate, formatMonthDisplay } from "@/lib/utils"
+import { useTransactions } from "@/hooks/use-transactions"
+import { useAvailableMonths } from "@/hooks/use-available-months";
 import { useCategories } from "@/hooks/use-categories";
 import type { Transaction } from "@/lib/api";
 import {
@@ -47,101 +48,87 @@ import { TransactionEditDialog } from "@/components/transaction-edit-dialog";
 import { Badge } from "@/components/ui/badge";
 import { TransactionCreateDialog } from "@/components/transaction-create-dialog";
 import { InlineTagEditor } from "@/components/inline-tag-editor";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function TransactionsPage() {
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  })
+  const [currentPage, setCurrentPage] = useState(1)
+  const limit = 10
+
   const {
     transactions,
+    pagination,
     isLoading,
     error,
     removeTransaction,
     refreshTransactions,
-  } = useTransactions();
-  const { categories } = useCategories();
-  const [filteredTransactions, setFilteredTransactions] = useState<
-    Transaction[]
-  >([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState("AMBOS");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [sortOrder, setSortOrder] = useState("newest");
-  const [tagFilter, setTagFilter] = useState("all");
+  } = useTransactions(selectedMonth, currentPage, limit)
+  
+  const { months: availableMonths } = useAvailableMonths()
+  const { categories } = useCategories()
   const [editingTransactionId, setEditingTransactionId] = useState<
     string | null
-  >(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Intl.DateTimeFormat("pt-BR").format(new Date(dateString));
-  };
+  >(null)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const handleTransactionChanged = () => {
     refreshTransactions();
     setRefreshKey((prev) => prev + 1);
   };
 
-  useEffect(() => {
-    if (!transactions) return;
+  const handleMonthChange = (month: string) => {
+    setSelectedMonth(month)
+    setCurrentPage(1)
+  }
 
-    let result = [...transactions];
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
 
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(
-        (t) =>
-          t.description.toLowerCase().includes(query) ||
-          t.category?.name.toLowerCase().includes(query)
-      );
-    }
-
-    if (typeFilter !== "AMBOS") {
-      result = result.filter((t) => t.type === typeFilter);
-    }
-
-    if (categoryFilter !== "all") {
-      result = result.filter((t) => t.categoryId === categoryFilter);
-    }
-
-    if (tagFilter !== "all") {
-      if (tagFilter === "none") {
-        result = result.filter((t) => !t.tag);
-      } else {
-        result = result.filter((t) => t.tag === tagFilter);
-      }
-    }
-
-    result.sort((a, b) => {
-      switch (sortOrder) {
-        case "newest":
-          return new Date(b.date).getTime() - new Date(a.date).getTime();
-        case "oldest":
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
-        case "highest":
-          return Number(b.amount) - Number(a.amount);
-        case "lowest":
-          return Number(a.amount) - Number(b.amount);
-        default:
-          return 0;
-      }
-    });
-
-    setFilteredTransactions(result);
-  }, [
-    transactions,
-    searchQuery,
-    typeFilter,
-    categoryFilter,
-    tagFilter,
-    sortOrder,
-    refreshKey,
-  ]);
+  const SkeletonTable = () => (
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Descrição</TableHead>
+            <TableHead>Categoria</TableHead>
+            <TableHead>Data</TableHead>
+            <TableHead>Tag</TableHead>
+            <TableHead className="text-right">Valor</TableHead>
+            <TableHead className="w-[100px]">Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Array.from({ length: limit }).map((_, i) => (
+            <TableRow key={i}>
+              <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+              <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+              <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
+              <TableCell className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableCell>
+              <TableCell>
+                <div className="flex justify-end gap-2">
+                  <Skeleton className="h-8 w-8 rounded" />
+                  <Skeleton className="h-8 w-8 rounded" />
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -151,6 +138,18 @@ export default function TransactionsPage() {
             <span className="text-lg">Transações</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
+            <Select value={selectedMonth} onValueChange={handleMonthChange}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Selecione o mês" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableMonths.map((month) => (
+                  <SelectItem key={month} value={month}>
+                    {formatMonthDisplay(month)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
               Nova Transação
             </Button>
@@ -159,85 +158,7 @@ export default function TransactionsPage() {
       </header>
       <main className="flex-1 p-4 md:p-6">
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row gap-4 justify-between">
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Buscar transações..."
-                className="w-full pl-8"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Select
-                defaultValue="AMBOS"
-                value={typeFilter}
-                onValueChange={setTypeFilter}
-              >
-                <SelectTrigger className="w-full sm:w-[190px]">
-                  <SelectValue placeholder="Tipo de Transação" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="AMBOS">Todas as Transações</SelectItem>
-                  <SelectItem value="GANHO">Ganhos</SelectItem>
-                  <SelectItem value="GASTO">Gastos</SelectItem>
-                </SelectContent>
-              </Select>
-              {/*<Select
-                defaultValue="all"
-                value={categoryFilter}
-                onValueChange={setCategoryFilter}
-              >
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as Categorias</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>*/}
-              <Select
-                defaultValue="all"
-                value={tagFilter}
-                onValueChange={setTagFilter}
-              >
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Status</SelectItem>
-                  <SelectItem value="none">Sem Status</SelectItem>
-                  <SelectItem value="FALTA">Falta</SelectItem>
-                  <SelectItem value="PAGO">Pago</SelectItem>
-                  <SelectItem value="DEVOLVER">Devolver</SelectItem>
-                  <SelectItem value="ECONOMIA">Economia</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                defaultValue="newest"
-                value={sortOrder}
-                onValueChange={setSortOrder}
-              >
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Ordenar Por" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Mais Recentes</SelectItem>
-                  <SelectItem value="oldest">Mais Antigas</SelectItem>
-                  <SelectItem value="highest">Maior Valor</SelectItem>
-                  <SelectItem value="lowest">Menor Valor</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {isLoading ? (
+          {isLoading && transactions.length === 0 ? (
             <div className="flex justify-center items-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <span className="ml-2 text-lg">Carregando transações...</span>
@@ -248,125 +169,195 @@ export default function TransactionsPage() {
                 Erro ao carregar transações. Por favor, tente novamente.
               </p>
             </div>
-          ) : filteredTransactions.length === 0 ? (
+          ) : transactions.length === 0 ? (
             <div className="rounded-md border p-8 text-center">
               <p className="text-muted-foreground mb-4">
-                Nenhuma transação encontrada.
+                Nenhuma transação encontrada para {formatMonthDisplay(selectedMonth)}.
               </p>
               <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
                 Adicionar Nova Transação
               </Button>
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Tag</TableHead>
-                    <TableHead className="text-right">Valor</TableHead>
-                    <TableHead className="w-[100px]">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTransactions.map((transaction) => (
-                    <TableRow key={`${transaction.id}-${refreshKey}`}>
-                      <TableCell className="font-medium">
-                        {transaction.description}
-                      </TableCell>
-                      <TableCell>
-                        {transaction.category?.name || "Sem categoria"}
-                      </TableCell>
-                      <TableCell>
-                        {formatDate(transaction.date.toString())}
-                      </TableCell>
-                      <TableCell>
-                        <InlineTagEditor
-                          transactionId={transaction.id}
-                          currentTag={transaction.tag ?? null}
-                          onSuccess={handleTransactionChanged}
-                        />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {transaction.type === "GANHO" ? (
-                            <ArrowUpIcon className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <ArrowDownIcon className="h-4 w-4 text-red-500" />
+            <>
+              {isLoading ? <SkeletonTable /> : (
+                <div className="rounded-md border">
+                  <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Tag</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                      <TableHead className="w-[100px]">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions.map((transaction) => (
+                      <TableRow key={`${transaction.id}-${refreshKey}`}>
+                        <TableCell className="font-medium">
+                          {transaction.description}
+                        </TableCell>
+                        <TableCell>
+                          {transaction.category?.name || "Sem categoria"}
+                        </TableCell>
+                        <TableCell>
+                          {formatDate(transaction.date.toString())}
+                        </TableCell>
+                        <TableCell>
+                          <InlineTagEditor
+                            transactionId={transaction.id}
+                            currentTag={transaction.tag ?? null}
+                            onSuccess={handleTransactionChanged}
+                          />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {transaction.type === "GANHO" ? (
+                              <ArrowUpIcon className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <ArrowDownIcon className="h-4 w-4 text-red-500" />
+                            )}
+                            <span
+                              className={cn(
+                                "font-medium",
+                                transaction.type === "GANHO"
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              )}
+                            >
+                              {transaction.type === "GANHO" ? "+" : "-"}
+                              {formatCurrency(Number(transaction.amount))}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() =>
+                                setEditingTransactionId(transaction.id)
+                              }
+                            >
+                              <Pencil className="h-4 w-4" />
+                              <span className="sr-only">Editar</span>
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                  <span className="sr-only">Excluir</span>
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Tem certeza?
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Esta ação não pode ser desfeita. Isso excluirá
+                                    permanentemente esta transação.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() =>
+                                      removeTransaction(transaction.id)
+                                    }
+                                    className="bg-destructive text-destructive-foreground"
+                                  >
+                                    Excluir
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                </div>
+              )}
+
+              {pagination.totalPages > 1 && (
+                <div className="flex items-center w-full justify-between gap-4">
+                  <div className="text-sm w-full text-muted-foreground">
+                    Mostrando {((pagination.page - 1) * pagination.limit) + 1} a{' '}
+                    {Math.min(pagination.page * pagination.limit, pagination.totalCount)} de{' '}
+                    {pagination.totalCount} transações
+                  </div>
+                  <Pagination className="justify-end">
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (pagination.hasPrev && !isLoading) {
+                              handlePageChange(pagination.page - 1);
+                            }
+                          }}
+                          className={cn(
+                            !pagination.hasPrev || isLoading
+                              ? "pointer-events-none opacity-50"
+                              : "cursor-pointer"
                           )}
-                          <span
+                        />
+                      </PaginationItem>
+                      
+                      {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (!isLoading) {
+                                handlePageChange(page);
+                              }
+                            }}
+                            isActive={page === pagination.page}
                             className={cn(
-                              "font-medium",
-                              transaction.type === "GANHO"
-                                ? "text-green-600"
-                                : "text-red-600"
+                              isLoading ? "pointer-events-none opacity-50" : "cursor-pointer"
                             )}
                           >
-                            {transaction.type === "GANHO" ? "+" : "-"}
-                            {formatCurrency(Number(transaction.amount))}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              setEditingTransactionId(transaction.id)
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (pagination.hasNext && !isLoading) {
+                              handlePageChange(pagination.page + 1);
                             }
-                          >
-                            <Pencil className="h-4 w-4" />
-                            <span className="sr-only">Editar</span>
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Excluir</span>
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Tem certeza?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Esta ação não pode ser desfeita. Isso excluirá
-                                  permanentemente esta transação.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    removeTransaction(transaction.id)
-                                  }
-                                  className="bg-destructive text-destructive-foreground"
-                                >
-                                  Excluir
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                          }}
+                          className={cn(
+                            !pagination.hasNext || isLoading
+                              ? "pointer-events-none opacity-50"
+                              : "cursor-pointer"
+                          )}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>
 
-      {/* Edit Dialog */}
       {editingTransactionId && (
         <TransactionEditDialog
           transactionId={editingTransactionId}

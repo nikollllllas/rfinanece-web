@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { DatePicker } from "@/components/ui/date-picker"
 import { Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useCategories } from "@/hooks/use-categories"
@@ -20,6 +19,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { DatePicker } from "./ui/date-picker"
+import { MonthPicker } from "./ui/monthpicker"
+import { format } from "date-fns"
+import { ptBR } from "date-fns/locale"
 
 interface BudgetCreateDialogProps {
   open: boolean
@@ -31,21 +34,16 @@ export function BudgetCreateDialog({ open, onOpenChange, onSuccess }: BudgetCrea
   const router = useRouter()
   const { toast } = useToast()
   const { categories, isLoading: categoriesLoading } = useCategories()
-
+  const [month, setMonth] = useState<Date>();
   const [amount, setAmount] = useState("")
-  const [period, setPeriod] = useState<string>("MENSAL")
+  const [budgetMonth, setBudgetMonth] = useState(() => {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  })
   const [categoryId, setCategoryId] = useState("")
-  const [startDate, setStartDate] = useState<Date>(new Date())
-  const [endDate, setEndDate] = useState<Date | undefined>(undefined)
-  const [showEndDate, setShowEndDate] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const expenseCategories = categories.filter((category) => category.type === "GASTO" || category.type === "AMBOS")
-
-  const handlePeriodChange = (value: string) => {
-    setPeriod(value)
-    setShowEndDate(value === "PERSONALIZADO")
-  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -54,9 +52,7 @@ export function BudgetCreateDialog({ open, onOpenChange, onSuccess }: BudgetCrea
     try {
       const budgetData = {
         amount: Number.parseFloat(amount),
-        period: period as any,
-        startDate: startDate.toISOString(),
-        endDate: showEndDate && endDate ? endDate.toISOString() : undefined,
+        budgetMonth,
         categoryId,
       }
 
@@ -68,11 +64,11 @@ export function BudgetCreateDialog({ open, onOpenChange, onSuccess }: BudgetCrea
       })
 
       setAmount("")
-      setPeriod("MENSAL")
+      setBudgetMonth(() => {
+        const now = new Date()
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+      })
       setCategoryId("")
-      setStartDate(new Date())
-      setEndDate(undefined)
-      setShowEndDate(false)
 
       onOpenChange(false)
       if (onSuccess) onSuccess()
@@ -143,36 +139,13 @@ export function BudgetCreateDialog({ open, onOpenChange, onSuccess }: BudgetCrea
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="period">Período</Label>
-              <Select required name="period" value={period} onValueChange={handlePeriodChange}>
-                <SelectTrigger id="period">
-                  <SelectValue placeholder="Selecione um período" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DIARIO">Diário</SelectItem>
-                  <SelectItem value="SEMANAL">Semanal</SelectItem>
-                  <SelectItem value="MENSAL">Mensal</SelectItem>
-                  <SelectItem value="QUARTENAL">Trimestral</SelectItem>
-                  <SelectItem value="ANUAL">Anual</SelectItem>
-                  <SelectItem value="PERSONALIZADO">Personalizado</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="space-y-2 flex flex-col">
+              <Label htmlFor="budgetMonth">Mês do Orçamento</Label>
+              <MonthPicker
+                selectedMonth={month}
+                onMonthSelect={(newMonth) => setMonth(newMonth)}
+              />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Data de Início</Label>
-              <DatePicker date={startDate} setDate={(newDate) => newDate && setStartDate(newDate)} />
-              <input type="hidden" name="startDate" value={startDate.toISOString()} />
-            </div>
-
-            {showEndDate && (
-              <div className="space-y-2">
-                <Label htmlFor="endDate">Data de Término</Label>
-                <DatePicker date={endDate} setDate={setEndDate} />
-                {endDate && <input type="hidden" name="endDate" value={endDate.toISOString()} />}
-              </div>
-            )}
           </div>
           <DialogFooter>
             <Button variant="outline" type="button" onClick={() => onOpenChange(false)} disabled={isSubmitting}>

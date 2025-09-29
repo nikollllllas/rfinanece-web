@@ -2,22 +2,16 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDashboard } from "@/components/dashboard-provider";
+import { formatCurrency, formatChange } from "@/lib/utils";
+import { DashboardData } from "@/lib/api";
 
-export function DashboardSummary() {
-  const { dashboardData, isLoading, error } = useDashboard();
+interface DashboardSummaryProps {
+  dashboardData: DashboardData | null;
+  isLoading: boolean;
+  error: Error | null;
+}
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(amount);
-  };
-
-  const formatChange = (change: number) => {
-    const sign = change >= 0 ? "+" : "";
-    return `${sign}${change.toFixed(1)}%`;
-  };
+export function DashboardSummary( {dashboardData, isLoading, error}: DashboardSummaryProps ) {
 
   if (isLoading) {
     return (

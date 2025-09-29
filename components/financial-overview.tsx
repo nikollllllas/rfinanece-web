@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -12,19 +11,16 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Loader2 } from "lucide-react";
-import { useDashboard } from "@/components/dashboard-provider";
+import { DashboardData } from "@/lib/api";
+import { formatCurrency } from "@/lib/utils";
 
-export default function FinancialOverview() {
-  const [mounted, setMounted] = useState(false);
-  const { dashboardData, isLoading, error } = useDashboard();
+interface FinancialOverviewProps {
+  dashboardData: DashboardData | null;
+  isLoading: boolean;
+  error: Error | null;
+}
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null;
-  }
+export default function FinancialOverview({dashboardData, isLoading, error}: FinancialOverviewProps) {
 
   if (isLoading) {
     return (
@@ -42,13 +38,6 @@ export default function FinancialOverview() {
       </div>
     );
   }
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(value);
-  };
 
   return (
     <ResponsiveContainer width="100%" height={300}>

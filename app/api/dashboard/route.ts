@@ -2,13 +2,19 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { startOfMonth, endOfMonth, subMonths, format } from "date-fns"
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const today = new Date()
-    const currentMonthStart = startOfMonth(today)
-    const currentMonthEnd = endOfMonth(today)
-    const previousMonthStart = startOfMonth(subMonths(today, 1))
-    const previousMonthEnd = endOfMonth(subMonths(today, 1))
+    const { searchParams } = new URL(request.url)
+    const monthParam = searchParams.get('month')
+    
+    const targetDate = monthParam 
+      ? new Date(parseInt(monthParam.split('-')[0]), parseInt(monthParam.split('-')[1]) - 1, 1)
+      : new Date()
+    
+    const currentMonthStart = startOfMonth(targetDate)
+    const currentMonthEnd = endOfMonth(targetDate)
+    const previousMonthStart = startOfMonth(subMonths(targetDate, 1))
+    const previousMonthEnd = endOfMonth(subMonths(targetDate, 1))
 
     const currentMonthTransactions = await prisma.transaction.findMany({
       where: {
@@ -31,7 +37,6 @@ export async function GET() {
       },
     })
 
-    // Calculate totals for current month
     const currentMonthIncome = currentMonthTransactions
       .filter((t) => t.type === "GANHO")
       .reduce((sum, t) => sum + Number(t.amount), 0)
@@ -40,9 +45,9 @@ export async function GET() {
       .filter((t) => t.type === "GASTO")
       .reduce((sum, t) => sum + Number(t.amount), 0)
 
+      console.log(currentMonthIncome, currentMonthExpenses);
     const currentMonthSavings = currentMonthIncome - currentMonthExpenses
 
-    // Calculate totals for previous month
     const previousMonthIncome = previousMonthTransactions
       .filter((t) => t.type === "GANHO")
       .reduce((sum, t) => sum + Number(t.amount), 0)
@@ -92,22 +97,11 @@ export async function GET() {
       },
     })
 
+    const currentMonthString = format(targetDate, "yyyy-MM")
+    
     const budgets = await prisma.budget.findMany({
       where: {
-        period: "MENSAL",
-        startDate: {
-          lte: today,
-        },
-        OR: [
-          {
-            endDate: {
-              gte: today,
-            },
-          },
-          {
-            endDate: null,
-          },
-        ],
+        budgetMonth: currentMonthString,
       },
       include: {
         category: true,
@@ -145,7 +139,7 @@ export async function GET() {
 
     const monthlyData = []
     for (let i = 5; i >= 0; i--) {
-      const monthDate = subMonths(today, i)
+      const monthDate = subMonths(targetDate, i)
       const monthStart = startOfMonth(monthDate)
       const monthEnd = endOfMonth(monthDate)
 

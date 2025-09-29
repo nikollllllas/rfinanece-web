@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { type Budget, getBudgets, createBudget, updateBudget, deleteBudget, type BudgetData } from "@/lib/api"
+import { type Budget, getBudgets, createBudget, updateBudget, deleteBudget, replicateBudgets, type BudgetData } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 
 export function useBudgets() {
@@ -31,7 +31,7 @@ export function useBudgets() {
 
   useEffect(() => {
     fetchBudgets()
-  }, [fetchBudgets])
+  }, [])
 
   const addBudget = useCallback(
     async (data: BudgetData) => {
@@ -39,14 +39,14 @@ export function useBudgets() {
         const newBudget = await createBudget(data)
         setBudgets((prev) => [...prev, newBudget])
         toast({
-          title: "Success",
-          description: "Budget created successfully",
+          title: "Sucesso",
+          description: "Orçamento criado com sucesso",
         })
         return newBudget
       } catch (err) {
         toast({
-          title: "Error",
-          description: err instanceof Error ? err.message : "Failed to create budget",
+          title: "Erro",
+          description: err instanceof Error ? err.message : "Falha ao criar orçamento",
           variant: "destructive",
         })
         throw err
@@ -61,14 +61,14 @@ export function useBudgets() {
         const updatedBudget = await updateBudget(id, data)
         setBudgets((prev) => prev.map((budget) => (budget.id === id ? updatedBudget : budget)))
         toast({
-          title: "Success",
-          description: "Budget updated successfully",
+          title: "Sucesso",
+          description: "Orçamento atualizado com sucesso",
         })
         return updatedBudget
       } catch (err) {
         toast({
-          title: "Error",
-          description: err instanceof Error ? err.message : "Failed to update budget",
+          title: "Erro",
+          description: err instanceof Error ? err.message : "Falha ao atualizar orçamento",
           variant: "destructive",
         })
         throw err
@@ -83,13 +83,35 @@ export function useBudgets() {
         await deleteBudget(id)
         setBudgets((prev) => prev.filter((budget) => budget.id !== id))
         toast({
-          title: "Success",
-          description: "Budget deleted successfully",
+          title: "Sucesso",
+          description: "Orçamento excluído com sucesso",
         })
       } catch (err) {
         toast({
           title: "Error",
           description: err instanceof Error ? err.message : "Failed to delete budget",
+          variant: "destructive",
+        })
+        throw err
+      }
+    },
+    [toast],
+  )
+
+  const replicateBudgetsFromPreviousMonth = useCallback(
+    async (targetMonth: string) => {
+      try {
+        const result = await replicateBudgets(targetMonth)
+        setBudgets((prev) => [...prev, ...result.budgets])
+        toast({
+          title: "Sucesso!",
+          description: result.message,
+        })
+        return result.budgets
+      } catch (err) {
+        toast({
+          title: "Erro...",
+          description: err instanceof Error ? err.message : "Failed to replicate budgets",
           variant: "destructive",
         })
         throw err
@@ -106,7 +128,7 @@ export function useBudgets() {
     addBudget,
     editBudget,
     removeBudget,
-    // Helper functions
+    replicateBudgetsFromPreviousMonth,
     getBudgetById: useCallback((id: string) => budgets.find((b) => b.id === id), [budgets]),
     getBudgetsByCategory: useCallback(
       (categoryId: string) => budgets.filter((b) => b.categoryId === categoryId),
@@ -124,31 +146,32 @@ export function useBudgetProgress(budgetId: string) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
-  useEffect(() => {
-    async function fetchBudgetProgress() {
-      setIsLoading(true)
-      try {
-        const response = await fetch(`/api/budgets/${budgetId}/progress`)
-        if (!response.ok) {
-          throw new Error("Failed to fetch budget progress")
-        }
-        const data = await response.json()
-        setProgress({
-          current: data.current,
-          percentage: Math.min(Math.round((data.current / data.max) * 100), 100),
-          isOverBudget: data.current > data.max,
-        })
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error("An unknown error occurred"))
-      } finally {
-        setIsLoading(false)
+  const fetchBudgetProgress = useCallback(async () => {
+    if (!budgetId) return
+    
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`/api/budgets/${budgetId}/progress`)
+      if (!response.ok) {
+        throw new Error("Failed to fetch budget progress")
       }
-    }
-
-    if (budgetId) {
-      fetchBudgetProgress()
+      const data = await response.json()
+      setProgress({
+        current: data.current,
+        percentage: Math.min(Math.round((data.current / data.max) * 100), 100),
+        isOverBudget: data.current > data.max,
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("An unknown error occurred"))
+    } finally {
+      setIsLoading(false)
     }
   }, [budgetId])
+
+  useEffect(() => {
+    fetchBudgetProgress()
+  }, [fetchBudgetProgress])
 
   return { progress, isLoading, error }
 }

@@ -2,18 +2,16 @@
 
 import { Progress } from "@/components/ui/progress";
 import { Loader2 } from "lucide-react";
-import { useDashboard } from "@/components/dashboard-provider";
+import { DashboardData } from "@/lib/api";
+import { formatCurrency } from "@/lib/utils";
 
-export default function BudgetProgress() {
-  const { dashboardData, isLoading, error } = useDashboard();
+interface BudgetProgressProps {
+  dashboardData: DashboardData | null;
+  isLoading: boolean;
+  error: Error | null;
+}
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(amount);
-  };
-
+export default function BudgetProgress({dashboardData, isLoading, error}: BudgetProgressProps) {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-[300px]">

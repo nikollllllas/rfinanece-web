@@ -9,18 +9,7 @@ const budgetUpdateSchema = z.object({
     .or(z.string().transform((val) => Number.parseFloat(val)))
     .refine((val) => !isNaN(val), { message: "Valor precisa ser um número" })
     .optional(),
-  period: z.enum(["DIÁRIO", "SEMANAL", "MENSAL", "QUARTENAL", "ANUAL", "PERSONALIZADO"]).optional(),
-  startDate: z
-    .string()
-    .or(z.date())
-    .transform((val) => new Date(val))
-    .optional(),
-  endDate: z
-    .string()
-    .or(z.date())
-    .transform((val) => new Date(val))
-    .optional()
-    .nullable(),
+  budgetMonth: z.string().regex(/^\d{4}-\d{2}$/, "Formato de mês inválido (YYYY-MM)").optional(),
   categoryId: z.string().uuid("Categoria inválida").optional(),
 })
 

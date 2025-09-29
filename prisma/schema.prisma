@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -20,13 +14,11 @@ model Transaction {
   date        DateTime
   notes       String?
   type        TransactionType
-  tag         TransactionTag?
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
-
-  // Relations
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId  String
+  tag         TransactionTag?
+  category    Category        @relation(fields: [categoryId], references: [id])
 
   @@index([categoryId])
   @@index([date])
@@ -34,35 +26,32 @@ model Transaction {
 }
 
 model Category {
-  id        String        @id @default(uuid())
-  name      String        @unique
-  color     String        @default("#000000")
-  icon      String? // Store icon name or path
-  isDefault Boolean       @default(false)
-  type      CategoryType?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-
-  transactions Transaction[]
+  id           String        @id @default(uuid())
+  name         String        @unique
+  color        String        @default("#000000")
+  icon         String?
+  isDefault    Boolean       @default(false)
+  type         CategoryType?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   budgets      Budget[]
+  transactions Transaction[]
 
   @@map("categories")
 }
 
 model Budget {
-  id        String       @id @default(uuid())
-  amount    Decimal      @db.Decimal(10, 2)
-  period    BudgetPeriod
-  startDate DateTime
-  endDate   DateTime?
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id          String   @id @default(uuid())
+  amount      Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  categoryId  String
+  budgetMonth String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-  categoryId String
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-  @@unique([categoryId, period, startDate])
+  @@unique([categoryId, budgetMonth])
   @@index([categoryId])
+  @@index([budgetMonth])
   @@map("budgets")
 }
 
@@ -82,13 +71,4 @@ enum CategoryType {
   GANHO
   GASTO
   AMBOS
-}
-
-enum BudgetPeriod {
-  DIÁRIO
-  SEMANAL
-  MENSAL
-  QUARTENAL
-  ANUAL
-  PERSONALIZADO
 }

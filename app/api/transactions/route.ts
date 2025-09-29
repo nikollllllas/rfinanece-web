@@ -58,18 +58,55 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const month = searchParams.get("month")
+    const page = parseInt(searchParams.get("page") || "1")
+    const limit = parseInt(searchParams.get("limit") || "10")
+    const offset = (page - 1) * limit
+
+    const whereClause: any = {}
+    if (month) {
+      // Use UTC dates to avoid timezone issues
+      const [year, monthNum] = month.split('-').map(Number)
+      const startDate = new Date(Date.UTC(year, monthNum - 1, 1, 0, 0, 0, 0))
+      const endDate = new Date(Date.UTC(year, monthNum, 0, 23, 59, 59, 999))
+      whereClause.date = {
+        gte: startDate,
+        lte: endDate,
+      }
+    }
+
+    const totalCount = await prisma.transaction.count({
+      where: whereClause,
+    })
+
     const transactions = await prisma.transaction.findMany({
+      where: whereClause,
       include: {
         category: true,
       },
       orderBy: {
         date: "desc",
       },
+      skip: offset,
+      take: limit,
     })
 
-    return NextResponse.json(transactions)
+    const totalPages = Math.ceil(totalCount / limit)
+
+    return NextResponse.json({
+      transactions,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    })
   } catch (error) {
     console.error("Erro ao buscar transação:", error)
     return NextResponse.json({ error: "Erro ao buscar transação" }, { status: 500 })

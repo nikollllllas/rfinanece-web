@@ -7,17 +7,7 @@ const budgetSchema = z.object({
     .number()
     .or(z.string().transform((val) => Number.parseFloat(val)))
     .refine((val) => !isNaN(val), { message: "Amount must be a valid number" }),
-    period: z.enum(["DIÁRIO", "SEMANAL", "MENSAL", "QUARTENAL", "ANUAL", "PERSONALIZADO"]),
-  startDate: z
-    .string()
-    .or(z.date())
-    .transform((val) => new Date(val)),
-  endDate: z
-    .string()
-    .or(z.date())
-    .transform((val) => new Date(val))
-    .optional()
-    .nullable(),
+  budgetMonth: z.string().regex(/^\d{4}-\d{2}$/, "Formato de mês inválido (YYYY-MM)"),
   categoryId: z.string().uuid("Categoria inválida"),
 })
 
@@ -44,22 +34,19 @@ export async function POST(request: NextRequest) {
     const existingBudget = await prisma.budget.findFirst({
       where: {
         categoryId: data.categoryId,
-        period: data.period,
-        startDate: data.startDate,
+        budgetMonth: data.budgetMonth,
       },
     })
 
     if (existingBudget) {
-      return NextResponse.json({ error: "Uma carteira para esse período e categoria" }, { status: 409 })
+      return NextResponse.json({ error: "Já existe um orçamento para essa categoria neste mês" }, { status: 409 })
     }
 
     // Create the budget
     const budget = await prisma.budget.create({
       data: {
         amount: data.amount,
-        period: data.period,
-        startDate: data.startDate,
-        endDate: data.endDate,
+        budgetMonth: data.budgetMonth,
         categoryId: data.categoryId,
       },
     })
@@ -71,14 +58,23 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const month = searchParams.get("month")
+
+    const whereClause: any = {}
+    if (month) {
+      whereClause.budgetMonth = month
+    }
+
     const budgets = await prisma.budget.findMany({
+      where: whereClause,
       include: {
         category: true,
       },
       orderBy: {
-        startDate: "desc",
+        budgetMonth: "desc",
       },
     })
 
@@ -86,6 +82,75 @@ export async function GET() {
   } catch (error) {
     console.error("Erro ao buscar carteiras:", error)
     return NextResponse.json({ error: "Erro ao falhar carteiras" }, { status: 500 })
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { action, targetMonth } = body
+
+    if (action === "replicate") {
+      if (!targetMonth) {
+        return NextResponse.json({ error: "Mês de destino é obrigatório" }, { status: 400 })
+      }
+
+      if (!targetMonth.match(/^\d{4}-\d{2}$/)) {
+        return NextResponse.json({ error: "Formato de mês inválido (YYYY-MM)" }, { status: 400 })
+      }
+
+      const [year, month] = targetMonth.split('-').map(Number)
+      const prevDate = new Date(year, month - 2)
+      const prevMonth = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`
+
+      const previousBudgets = await prisma.budget.findMany({
+        where: {
+          budgetMonth: prevMonth,
+        },
+        include: {
+          category: true,
+        },
+      })
+
+      if (previousBudgets.length === 0) {
+        return NextResponse.json({ error: `Nenhum orçamento encontrado para ${prevMonth}` }, { status: 404 })
+      }
+
+      const existingBudgets = await prisma.budget.findMany({
+        where: {
+          budgetMonth: targetMonth,
+        },
+      })
+
+      if (existingBudgets.length > 0) {
+        return NextResponse.json({ error: `Já existem orçamentos para ${targetMonth}` }, { status: 409 })
+      }
+
+      const newBudgets = await Promise.all(
+        previousBudgets.map(async (budget) => {
+          return prisma.budget.create({
+            data: {
+              amount: budget.amount,
+              budgetMonth: targetMonth,
+              categoryId: budget.categoryId,
+            },
+            include: {
+              category: true,
+            },
+          })
+        })
+      )
+
+      return NextResponse.json({
+        message: `${newBudgets.length} orçamentos replicados com sucesso`,
+        budgets: newBudgets,
+      })
+    }
+
+    return NextResponse.json({ error: "Ação não reconhecida" }, { status: 400 })
+  } catch (error) {
+    console.error("Erro ao replicar orçamentos:", error)
+    return NextResponse.json({ error: "Falha ao replicar orçamentos" }, { status: 500 })
   }
 }
 
