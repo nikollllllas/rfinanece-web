@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react"
 import {
   type Transaction,
-  getTransactions,
   createTransaction,
   updateTransaction,
   deleteTransaction,
@@ -11,16 +10,9 @@ import {
 } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 
-export function useTransactions(month?: string, page: number = 1, limit: number = 10) {
+export function useTransactions(month?: string) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 10,
-    totalCount: 0,
-    totalPages: 0,
-    hasNext: false,
-    hasPrev: false,
-  })
+
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
   const { toast } = useToast()
@@ -32,8 +24,6 @@ export function useTransactions(month?: string, page: number = 1, limit: number 
     try {
       const params = new URLSearchParams()
       if (month) params.append('month', month)
-      params.append('page', page.toString())
-      params.append('limit', limit.toString())
 
       const response = await fetch(`/api/transactions?${params}`)
       if (!response.ok) {
@@ -42,7 +32,6 @@ export function useTransactions(month?: string, page: number = 1, limit: number 
       
       const data = await response.json()
       setTransactions(data.transactions)
-      setPagination(data.pagination)
     } catch (err) {
       setError(err instanceof Error ? err : new Error("An unknown error occurred"))
       toast({
@@ -53,7 +42,7 @@ export function useTransactions(month?: string, page: number = 1, limit: number 
     } finally {
       setIsLoading(false)
     }
-  }, [month, page, limit, toast])
+  }, [month, toast])
 
   useEffect(() => {
     fetchTransactions()
@@ -126,7 +115,6 @@ export function useTransactions(month?: string, page: number = 1, limit: number 
 
   return {
     transactions,
-    pagination,
     isLoading,
     error,
     refreshTransactions: fetchTransactions,

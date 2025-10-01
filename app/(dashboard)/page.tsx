@@ -77,7 +77,7 @@ function DashboardContent() {
             <CardHeader>
               <CardTitle>Visão Financeira</CardTitle>
               <CardDescription>
-                Sua atividade financeira nos últimos 6 meses
+                Sua atividade financeira nos últimos 6 meses:
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -88,7 +88,7 @@ function DashboardContent() {
             <CardHeader>
               <CardTitle>Gastos por Categoria</CardTitle>
               <CardDescription>
-                Detalhamento das suas gastos mensais
+                Detalhamento dos seus gastos mensais:
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -101,7 +101,7 @@ function DashboardContent() {
             <CardHeader>
               <CardTitle>Progresso do Orçamento</CardTitle>
               <CardDescription>
-                Acompanhe suas metas de orçamento
+                Acompanhe suas metas de orçamento:
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -113,7 +113,7 @@ function DashboardContent() {
               <div>
                 <CardTitle>Transações Recentes</CardTitle>
                 <CardDescription>
-                  Suas últimas atividades financeiras
+                  Suas últimas atividades financeiras:
                 </CardDescription>
               </div>
               <Button asChild variant="outline" size="sm">

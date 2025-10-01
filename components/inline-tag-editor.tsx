@@ -29,9 +29,8 @@ export function InlineTagEditor({
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
 
-  // Tag options
   const tagOptions = [
-    { value: null, label: "Nenhum", variant: "outline" },
+    { value: null, label: "Sem status", variant: "gray" },
     { value: "FALTA", label: "Falta", variant: "destructive" },
     {
       value: "PAGO",
@@ -46,10 +45,7 @@ export function InlineTagEditor({
     { value: "ECONOMIA", label: "Economia", variant: "success" },
   ];
 
-  // Get current tag display
   const getCurrentTagDisplay = () => {
-    if (currentTag === null) return null;
-
     const tagOption = tagOptions.find((option) => option.value === currentTag);
     if (!tagOption) return null;
 
@@ -105,17 +101,17 @@ export function InlineTagEditor({
                 !currentTag && "text-muted-foreground"
               )}
             >
-              {getCurrentTagDisplay() || "Sem status"}
+              {getCurrentTagDisplay()}
               <ChevronDown className="h-4 w-4 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-[180px]">
+          <DropdownMenuContent align="start" className="w-fit space-y-1">
             {tagOptions.map((option) => (
               <DropdownMenuItem
                 key={option.value || "none"}
                 disabled={option.value === currentTag}
                 className={cn(
-                  "flex items-center gap-2 cursor-pointer",
+                  "flex items-center gap-2 cursor-pointer p-0",
                   option.value === currentTag && "bg-accent"
                 )}
                 onClick={() =>
@@ -129,12 +125,10 @@ export function InlineTagEditor({
                   )
                 }
               >
-                {option.value === currentTag && <Check className="h-4 w-4" />}
-                {option.value ? (
-                  <Badge variant={option.variant as any}>{option.label}</Badge>
-                ) : (
-                  <span>Sem status</span>
-                )}
+                <Badge variant={option.variant as any} className="flex gap-1 w-full rounded justify-between"> 
+                  {option.label}
+                  {option.value === currentTag && <Check className="size-3" />}
+                </Badge>
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

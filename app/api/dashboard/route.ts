@@ -45,7 +45,6 @@ export async function GET(request: Request) {
       .filter((t) => t.type === "GASTO")
       .reduce((sum, t) => sum + Number(t.amount), 0)
 
-      console.log(currentMonthIncome, currentMonthExpenses);
     const currentMonthSavings = currentMonthIncome - currentMonthExpenses
 
     const previousMonthIncome = previousMonthTransactions

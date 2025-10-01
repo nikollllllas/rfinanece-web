@@ -31,8 +31,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { cn, formatCurrency, formatDate, formatMonthDisplay } from "@/lib/utils"
 import { useTransactions } from "@/hooks/use-transactions"
 import { useAvailableMonths } from "@/hooks/use-available-months";
-import { useCategories } from "@/hooks/use-categories";
-import type { Transaction } from "@/lib/api";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,34 +46,22 @@ import { TransactionEditDialog } from "@/components/transaction-edit-dialog";
 import { Badge } from "@/components/ui/badge";
 import { TransactionCreateDialog } from "@/components/transaction-create-dialog";
 import { InlineTagEditor } from "@/components/inline-tag-editor";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 
 export default function TransactionsPage() {
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   })
-  const [currentPage, setCurrentPage] = useState(1)
-  const limit = 10
 
   const {
     transactions,
-    pagination,
     isLoading,
     error,
     removeTransaction,
     refreshTransactions,
-  } = useTransactions(selectedMonth, currentPage, limit)
+  } = useTransactions(selectedMonth)
   
   const { months: availableMonths } = useAvailableMonths()
-  const { categories } = useCategories()
   const [editingTransactionId, setEditingTransactionId] = useState<
     string | null
   >(null)
@@ -89,11 +75,6 @@ export default function TransactionsPage() {
 
   const handleMonthChange = (month: string) => {
     setSelectedMonth(month)
-    setCurrentPage(1)
-  }
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
   }
 
   const SkeletonTable = () => (
@@ -110,7 +91,7 @@ export default function TransactionsPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {Array.from({ length: limit }).map((_, i) => (
+          {Array.from({ length: 10 }).map((_, i) => (
             <TableRow key={i}>
               <TableCell><Skeleton className="h-4 w-32" /></TableCell>
               <TableCell><Skeleton className="h-4 w-24" /></TableCell>
@@ -284,73 +265,6 @@ export default function TransactionsPage() {
                     ))}
                   </TableBody>
                 </Table>
-                </div>
-              )}
-
-              {pagination.totalPages > 1 && (
-                <div className="flex items-center w-full justify-between gap-4">
-                  <div className="text-sm w-full text-muted-foreground">
-                    Mostrando {((pagination.page - 1) * pagination.limit) + 1} a{' '}
-                    {Math.min(pagination.page * pagination.limit, pagination.totalCount)} de{' '}
-                    {pagination.totalCount} transações
-                  </div>
-                  <Pagination className="justify-end">
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (pagination.hasPrev && !isLoading) {
-                              handlePageChange(pagination.page - 1);
-                            }
-                          }}
-                          className={cn(
-                            !pagination.hasPrev || isLoading
-                              ? "pointer-events-none opacity-50"
-                              : "cursor-pointer"
-                          )}
-                        />
-                      </PaginationItem>
-                      
-                      {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((page) => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              if (!isLoading) {
-                                handlePageChange(page);
-                              }
-                            }}
-                            isActive={page === pagination.page}
-                            className={cn(
-                              isLoading ? "pointer-events-none opacity-50" : "cursor-pointer"
-                            )}
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
-                      
-                      <PaginationItem>
-                        <PaginationNext
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            if (pagination.hasNext && !isLoading) {
-                              handlePageChange(pagination.page + 1);
-                            }
-                          }}
-                          className={cn(
-                            !pagination.hasNext || isLoading
-                              ? "pointer-events-none opacity-50"
-                              : "cursor-pointer"
-                          )}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
                 </div>
               )}
             </>

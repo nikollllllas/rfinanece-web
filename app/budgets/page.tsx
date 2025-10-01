@@ -198,7 +198,7 @@ export default function BudgetsPage() {
       await replicateBudgetsFromPreviousMonth(selectedMonth)
       handleBudgetChanged()
     } catch (error) {
-      console.log(error)
+      console.error(error)
     } finally {
       setIsReplicating(false)
     }
