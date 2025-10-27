@@ -114,11 +114,11 @@ export default function TransactionsPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex h-14 items-center px-4 md:px-6">
+        <div className="flex h-20 md:h-14 items-center px-4 py-2 md:py-0 md:px-6 flex-col md:flex-row">
           <div className="flex items-center gap-2 font-semibold">
             <span className="text-lg">Transações</span>
           </div>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="md:ml-auto flex items-center gap-2 flex-col md:flex-row">
             <Select value={selectedMonth} onValueChange={handleMonthChange}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Selecione o mês" />
@@ -131,7 +131,7 @@ export default function TransactionsPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
+            <Button size="sm" onClick={() => setIsCreateDialogOpen(true)} className="hidden md:block">
               Nova Transação
             </Button>
           </div>
@@ -263,6 +263,24 @@ export default function TransactionsPage() {
                         </TableCell>
                       </TableRow>
                     ))}
+                    <TableRow className="w-full">
+                      <TableCell colSpan={4} className="text-right">
+                        <span className="font-medium">
+                          Total de Gastos: {' '}
+                        </span>
+                        <span>
+                          {formatCurrency(transactions.reduce((acc, transaction) => acc + Number(transaction.category?.type === "GASTO" ? transaction.amount : 0), 0))}
+                        </span>
+                      </TableCell>
+                      <TableCell colSpan={2} className="text-right">
+                        <span className="font-medium">
+                          Total movimentado no mês: {' '}
+                        </span>
+                        <span>
+                          {formatCurrency(transactions.reduce((acc, transaction) => acc + Number(transaction.amount), 0))}
+                        </span>
+                      </TableCell>
+                    </TableRow>
                   </TableBody>
                 </Table>
                 </div>
