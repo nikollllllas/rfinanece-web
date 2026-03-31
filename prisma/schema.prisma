@@ -8,20 +8,25 @@ datasource db {
 }
 
 model Transaction {
-  id          String          @id @default(uuid())
-  description String
-  amount      Decimal         @db.Decimal(10, 2)
-  date        DateTime
-  notes       String?
-  type        TransactionType
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  categoryId  String
-  tag         TransactionTag?
-  category    Category        @relation(fields: [categoryId], references: [id])
+  id                   String           @id @default(uuid())
+  description          String
+  amount               Decimal          @db.Decimal(10, 2)
+  date                 DateTime
+  notes                String?
+  type                 TransactionType
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  categoryId           String
+  tag                  TransactionTag?
+  paymentMethod        PaymentMethod?
+  installmentGroupId   String?          @db.Uuid
+  installmentIndex     Int?
+  installmentCount     Int?
+  category             Category         @relation(fields: [categoryId], references: [id])
 
   @@index([categoryId])
   @@index([date])
+  @@index([installmentGroupId])
   @@map("transactions")
 }
 
@@ -71,4 +76,10 @@ enum CategoryType {
   GANHO
   GASTO
   AMBOS
+}
+
+enum PaymentMethod {
+  PIX
+  DEBITO
+  CREDITO
 }

@@ -29,6 +29,10 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn, formatCurrency, formatDate, formatMonthDisplay } from "@/lib/utils"
+import {
+  getInstallmentSuffix,
+  getPaymentMethodLabel,
+} from "@/lib/installment-utils"
 import { useTransactions } from "@/hooks/use-transactions"
 import { useAvailableMonths } from "@/hooks/use-available-months";
 import {
@@ -175,10 +179,30 @@ export default function TransactionsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {transactions.map((transaction) => (
+                    {transactions.map((transaction) => {
+                      const installmentSuffix = getInstallmentSuffix(
+                        transaction.installmentIndex,
+                        transaction.installmentCount
+                      );
+                      const paymentLabel = getPaymentMethodLabel(
+                        transaction.paymentMethod
+                      );
+                      return (
                       <TableRow key={`${transaction.id}-${refreshKey}`}>
                         <TableCell className="font-medium">
-                          {transaction.description}
+                          <div className="flex flex-col gap-0.5">
+                            <span>
+                              {transaction.description}
+                              {installmentSuffix
+                                ? ` ${installmentSuffix}`
+                                : ""}
+                            </span>
+                            {transaction.type === "GASTO" && paymentLabel ? (
+                              <span className="text-xs font-normal text-muted-foreground">
+                                {paymentLabel}
+                              </span>
+                            ) : null}
+                          </div>
                         </TableCell>
                         <TableCell>
                           {transaction.category?.name || "Sem categoria"}
@@ -262,7 +286,8 @@ export default function TransactionsPage() {
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))}
+                      );
+                    })}
                     <TableRow className="w-full">
                       <TableCell colSpan={4} className="text-right">
                         <span className="font-medium">

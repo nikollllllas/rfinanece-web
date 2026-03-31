@@ -1,4 +1,4 @@
-import type { TransactionType, CategoryType } from "@prisma/client"
+import type { TransactionType, CategoryType, PaymentMethod } from "@prisma/client"
 
 export interface TransactionData {
   description: string
@@ -8,12 +8,18 @@ export interface TransactionData {
   categoryId: string
   notes?: string
   tag?: "FALTA" | "PAGO" | "DEVOLVER" | "ECONOMIA" | null
+  paymentMethod?: PaymentMethod | null
+  installmentCount?: number
 }
 
-export interface Transaction extends TransactionData {
+export interface Transaction
+  extends Omit<TransactionData, "installmentCount"> {
   id: string
   createdAt: string
   updatedAt: string
+  installmentGroupId?: string | null
+  installmentIndex?: number | null
+  installmentCount?: number | null
   category?: Category
 }
 
@@ -102,7 +108,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
 // ==================== TRANSACTION API FUNCTIONS ====================
 
-export async function createTransaction(data: TransactionData): Promise<Transaction> {
+export async function createTransaction(data: TransactionData): Promise<Transaction[]> {
   const response = await fetch("/api/transactions", {
     method: "POST",
     headers: {
@@ -111,7 +117,8 @@ export async function createTransaction(data: TransactionData): Promise<Transact
     body: JSON.stringify(data),
   })
 
-  return handleResponse<Transaction>(response)
+  const body = await handleResponse<{ transactions: Transaction[] }>(response)
+  return body.transactions
 }
 
 export async function getTransactions(): Promise<Transaction[]> {

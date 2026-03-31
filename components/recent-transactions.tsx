@@ -2,6 +2,10 @@
 
 import { ArrowDownIcon, ArrowUpIcon, Loader2 } from "lucide-react";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
+import {
+  getInstallmentSuffix,
+  getPaymentMethodLabel,
+} from "@/lib/installment-utils";
 import { DashboardData } from "@/lib/api";
 
 interface RecentTransactionsProps {
@@ -40,7 +44,13 @@ export default function RecentTransactions({dashboardData, isLoading, error}: Re
 
   return (
     <div className="space-y-4">
-      {recentTransactions.map((transaction) => (
+      {recentTransactions.map((transaction) => {
+        const installmentSuffix = getInstallmentSuffix(
+          transaction.installmentIndex,
+          transaction.installmentCount
+        );
+        const paymentLabel = getPaymentMethodLabel(transaction.paymentMethod);
+        return (
         <div
           key={transaction.id}
           className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent/50 transition-colors"
@@ -59,10 +69,16 @@ export default function RecentTransactions({dashboardData, isLoading, error}: Re
               )}
             </div>
             <div>
-              <p className="font-medium">{transaction.description}</p>
+              <p className="font-medium">
+                {transaction.description}
+                {installmentSuffix ? ` ${installmentSuffix}` : ""}
+              </p>
               <p className="text-xs text-muted-foreground">
                 {transaction.category?.name || "Sem categoria"} •{" "}
                 {formatDate(transaction.date.toString())}
+                {transaction.type === "GASTO" && paymentLabel
+                  ? ` • ${paymentLabel}`
+                  : ""}
               </p>
             </div>
           </div>
@@ -76,7 +92,8 @@ export default function RecentTransactions({dashboardData, isLoading, error}: Re
             {formatCurrency(Number(transaction.amount))}
           </div>
         </div>
-      ))}
+      );
+      })}
     </div>
   );
 }

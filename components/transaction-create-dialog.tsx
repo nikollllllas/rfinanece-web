@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,7 +18,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories } from "@/hooks/use-categories";
-import { createTransaction } from "@/lib/api";
+import { createTransaction, type TransactionData } from "@/lib/api";
+import {
+  INSTALLMENT_MAX,
+  INSTALLMENT_MIN_SPLIT,
+  splitInstallmentAmounts,
+} from "@/lib/installment-utils";
+import { formatCurrency } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -36,15 +41,16 @@ interface TransactionCreateDialogProps {
   onSuccess?: () => void;
 }
 
-export function TransactionCreateDialog({
+type ExpensePaymentMethod = "PIX" | "DEBITO" | "CREDITO";
+
+export const TransactionCreateDialog = ({
   open,
   onOpenChange,
   onSuccess,
-}: TransactionCreateDialogProps) {
+}: TransactionCreateDialogProps) => {
   const { toast } = useToast();
   const { categories, isLoading: categoriesLoading } = useCategories();
 
-  // Form state
   const [transactionType, setTransactionType] = useState<"GANHO" | "GASTO">(
     "GASTO"
   );
@@ -54,18 +60,37 @@ export function TransactionCreateDialog({
   const [categoryId, setCategoryId] = useState("");
   const [notes, setNotes] = useState("");
   const [tag, setTag] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<ExpensePaymentMethod>("PIX");
+  const [creditInstallments, setCreditInstallments] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const filteredCategories = categories.filter(
-    (category) => category.type === transactionType || category.type === "AMBOS"
+    (category) =>
+      category.type === transactionType || category.type === "AMBOS"
   );
+
+  const totalNum = Number.parseFloat(amount);
+  const isCreditSplit =
+    transactionType === "GASTO" &&
+    paymentMethod === "CREDITO" &&
+    creditInstallments >= INSTALLMENT_MIN_SPLIT;
+  const parcelAmounts =
+    isCreditSplit && !Number.isNaN(totalNum) && totalNum > 0
+      ? splitInstallmentAmounts(totalNum, creditInstallments)
+      : [];
+  const firstParcel = parcelAmounts[0];
+  const lastParcel = parcelAmounts[parcelAmounts.length - 1];
+  const showParcelPreview =
+    isCreditSplit && parcelAmounts.length > 0 && firstParcel !== undefined;
+  const dateLabel =
+    isCreditSplit && showParcelPreview ? "Primeira parcela" : "Data";
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const transactionData = {
+      const transactionData: TransactionData = {
         description,
         amount: Number.parseFloat(amount),
         date: date.toISOString(),
@@ -81,6 +106,16 @@ export function TransactionCreateDialog({
           | undefined,
       };
 
+      if (transactionType === "GASTO") {
+        transactionData.paymentMethod = paymentMethod;
+        if (
+          paymentMethod === "CREDITO" &&
+          creditInstallments >= INSTALLMENT_MIN_SPLIT
+        ) {
+          transactionData.installmentCount = creditInstallments;
+        }
+      }
+
       await createTransaction(transactionData);
 
       toast({
@@ -94,11 +129,12 @@ export function TransactionCreateDialog({
       setCategoryId("");
       setNotes("");
       setTag(null);
+      setPaymentMethod("PIX");
+      setCreditInstallments(1);
 
       onOpenChange(false);
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error("Erro ao criar transação:", error);
       toast({
         title: "Erro",
         description:
@@ -108,6 +144,10 @@ export function TransactionCreateDialog({
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleTypeChange = (value: string) => {
+    setTransactionType(value as "GANHO" | "GASTO");
   };
 
   return (
@@ -127,9 +167,7 @@ export function TransactionCreateDialog({
               <RadioGroup
                 value={transactionType}
                 className="flex gap-4"
-                onValueChange={(value) =>
-                  setTransactionType(value as "GANHO" | "GASTO")
-                }
+                onValueChange={handleTypeChange}
                 name="type"
               >
                 <div className="flex items-center space-x-2">
@@ -176,12 +214,100 @@ export function TransactionCreateDialog({
                   required
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
+                  aria-describedby={
+                    showParcelPreview ? "installment-preview" : undefined
+                  }
                 />
               </div>
             </div>
 
+            {transactionType === "GASTO" ? (
+              <div className="space-y-3">
+                <Label>Meio de pagamento</Label>
+                <RadioGroup
+                  value={paymentMethod}
+                  onValueChange={(v) => {
+                    setPaymentMethod(v as ExpensePaymentMethod);
+                    if (v !== "CREDITO") {
+                      setCreditInstallments(1);
+                    }
+                  }}
+                  className="flex flex-col gap-2 sm:flex-row sm:flex-wrap"
+                  name="paymentMethod"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="PIX" id="pay-pix" />
+                    <Label htmlFor="pay-pix" className="cursor-pointer">
+                      Pix
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="DEBITO" id="pay-debito" />
+                    <Label htmlFor="pay-debito" className="cursor-pointer">
+                      Débito
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="CREDITO" id="pay-credito" />
+                    <Label htmlFor="pay-credito" className="cursor-pointer">
+                      Crédito
+                    </Label>
+                  </div>
+                </RadioGroup>
+
+                {paymentMethod === "CREDITO" ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="credit-installments">Parcelas</Label>
+                    <Select
+                      value={String(creditInstallments)}
+                      onValueChange={(v) =>
+                        setCreditInstallments(Number.parseInt(v, 10))
+                      }
+                      name="creditInstallments"
+                    >
+                      <SelectTrigger id="credit-installments" className="w-full">
+                        <SelectValue placeholder="Número de parcelas" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">À vista (1x)</SelectItem>
+                        {Array.from(
+                          { length: INSTALLMENT_MAX - 1 },
+                          (_, i) => i + INSTALLMENT_MIN_SPLIT
+                        ).map((n) => (
+                          <SelectItem key={n} value={String(n)}>
+                            {n}x
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : null}
+
+                {showParcelPreview ? (
+                  <div
+                    id="installment-preview"
+                    className="rounded-md border bg-muted/50 px-3 py-2 text-sm"
+                    role="status"
+                  >
+                    <p className="font-medium text-foreground">
+                      Valor da parcela: {formatCurrency(firstParcel)}
+                    </p>
+                    {lastParcel !== undefined && lastParcel !== firstParcel ? (
+                      <p className="mt-1 text-muted-foreground">
+                        Última parcela: {formatCurrency(lastParcel)} (ajuste de
+                        centavos)
+                      </p>
+                    ) : null}
+                    <p className="mt-1 text-muted-foreground">
+                      Total: {formatCurrency(totalNum)}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className="space-y-2">
-              <Label htmlFor="date">Data</Label>
+              <Label htmlFor="date">{dateLabel}</Label>
               <DatePicker
                 date={date}
                 setDate={(newDate) => newDate && setDate(newDate)}
@@ -220,7 +346,6 @@ export function TransactionCreateDialog({
               </Select>
             </div>
 
-            {/* Tag field */}
             <div className="space-y-2">
               <Label htmlFor="tag">Status</Label>
               <Select
@@ -228,7 +353,7 @@ export function TransactionCreateDialog({
                 value={tag || "none"}
                 onValueChange={(value) =>
                   setTag(
-                    value === ""
+                    value === "none"
                       ? null
                       : (value as "FALTA" | "PAGO" | "DEVOLVER" | "ECONOMIA")
                   )
@@ -311,4 +436,4 @@ export function TransactionCreateDialog({
       </DialogContent>
     </Dialog>
   );
-}
+};

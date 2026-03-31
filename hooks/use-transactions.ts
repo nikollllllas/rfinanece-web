@@ -51,13 +51,13 @@ export function useTransactions(month?: string) {
   const addTransaction = useCallback(
     async (data: TransactionData) => {
       try {
-        const newTransaction = await createTransaction(data)
-        setTransactions((prev) => [newTransaction, ...prev])
+        const created = await createTransaction(data)
+        await fetchTransactions()
         toast({
           title: "Success",
           description: "Transaction created successfully",
         })
-        return newTransaction
+        return created[0]
       } catch (err) {
         toast({
           title: "Error",
@@ -67,7 +67,7 @@ export function useTransactions(month?: string) {
         throw err
       }
     },
-    [toast],
+    [toast, fetchTransactions],
   )
 
   const editTransaction = useCallback(

@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +19,10 @@ import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories } from "@/hooks/use-categories";
 import { getTransaction, updateTransaction } from "@/lib/api";
+import {
+  getInstallmentSuffix,
+  getPaymentMethodLabel,
+} from "@/lib/installment-utils";
 import {
   Dialog,
   DialogContent,
@@ -137,7 +140,6 @@ export function TransactionEditDialog({
       onOpenChange(false);
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error("Erro ao atualizar transação:", error);
       toast({
         title: "Erro",
         description:
@@ -249,6 +251,42 @@ export function TransactionEditDialog({
                   />
                 </div>
               </div>
+
+              {transaction &&
+              transaction.type === "GASTO" &&
+              (transaction.paymentMethod ||
+                transaction.installmentGroupId) ? (
+                <div
+                  className="rounded-md border bg-muted/40 px-3 py-2 text-sm text-muted-foreground"
+                  role="region"
+                  aria-label="Informações de pagamento"
+                >
+                  {getPaymentMethodLabel(transaction.paymentMethod) ? (
+                    <p>
+                      Meio de pagamento:{" "}
+                      <span className="font-medium text-foreground">
+                        {getPaymentMethodLabel(transaction.paymentMethod)}
+                      </span>
+                    </p>
+                  ) : null}
+                  {getInstallmentSuffix(
+                    transaction.installmentIndex,
+                    transaction.installmentCount
+                  ) ? (
+                    <p className={transaction.paymentMethod ? "mt-1" : ""}>
+                      Parcela{" "}
+                      <span className="font-medium text-foreground">
+                        {getInstallmentSuffix(
+                          transaction.installmentIndex,
+                          transaction.installmentCount
+                        )}
+                      </span>
+                      {" "}
+                      (alterar esta linha não muda as demais parcelas)
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
 
               <div className="space-y-2">
                 <Label htmlFor="date">Data</Label>

@@ -15,6 +15,10 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Pencil, Trash2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { cn, formatCurrency } from "@/lib/utils";
+import {
+  getInstallmentSuffix,
+  getPaymentMethodLabel,
+} from "@/lib/installment-utils";
 import { useToast } from "@/hooks/use-toast";
 import { getTransaction, deleteTransaction } from "@/lib/api";
 import { useCategories } from "@/hooks/use-categories";
@@ -167,6 +171,12 @@ export default function TransactionDetailsPage() {
     );
   }
 
+  const installmentSuffix = getInstallmentSuffix(
+    transaction.installmentIndex,
+    transaction.installmentCount
+  );
+  const paymentMethodLabel = getPaymentMethodLabel(transaction.paymentMethod);
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -232,6 +242,7 @@ export default function TransactionDetailsPage() {
               <div>
                 <CardTitle className="text-xl">
                   {transaction.description}
+                  {installmentSuffix ? ` ${installmentSuffix}` : ""}
                 </CardTitle>
                 <CardDescription>
                   {new Intl.DateTimeFormat("pt-BR", {
@@ -281,6 +292,26 @@ export default function TransactionDetailsPage() {
                 </div>
               </div>
             </div>
+
+            {transaction.type === "GASTO" && paymentMethodLabel ? (
+              <>
+                <Separator />
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                    Meio de pagamento
+                  </h3>
+                  <p className="font-medium">{paymentMethodLabel}</p>
+                  {transaction.installmentIndex != null &&
+                  transaction.installmentCount != null &&
+                  transaction.installmentCount >= 2 ? (
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Parcela {transaction.installmentIndex} de{" "}
+                      {transaction.installmentCount}
+                    </p>
+                  ) : null}
+                </div>
+              </>
+            ) : null}
 
             {transaction.notes && (
               <>
