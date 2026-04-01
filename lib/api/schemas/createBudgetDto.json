@@ -1,0 +1,10 @@
+{
+	"type": "object",
+	"properties": {
+		"amount": { "type": "number", "example": 1200.5 },
+		"budgetMonth": { "type": "string", "example": "2026-03" },
+		"categoryId": { "type": "string", "example": "uuid-category" }
+	},
+	"required": ["amount", "budgetMonth", "categoryId"],
+	"x-readme-ref-name": "CreateBudgetDto"
+}

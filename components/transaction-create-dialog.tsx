@@ -18,7 +18,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories } from "@/hooks/use-categories";
-import { createTransaction, type TransactionData } from "@/lib/api";
+import { type TransactionData } from "@/lib/api-types";
+import { useTransactionsControllerCreate } from "@/lib/api/transactions/hooks/use-transactions-controller-create";
+import { kubbClientConfig } from "@/lib/kubb-client";
 import {
   INSTALLMENT_MAX,
   INSTALLMENT_MIN_SPLIT,
@@ -50,6 +52,9 @@ export const TransactionCreateDialog = ({
 }: TransactionCreateDialogProps) => {
   const { toast } = useToast();
   const { categories, isLoading: categoriesLoading } = useCategories();
+  const createMutation = useTransactionsControllerCreate({
+    client: kubbClientConfig,
+  });
 
   const [transactionType, setTransactionType] = useState<"GANHO" | "GASTO">(
     "GASTO"
@@ -116,7 +121,7 @@ export const TransactionCreateDialog = ({
         }
       }
 
-      await createTransaction(transactionData);
+      await createMutation.mutateAsync({ data: transactionData as any });
 
       toast({
         title: "Transação criada",

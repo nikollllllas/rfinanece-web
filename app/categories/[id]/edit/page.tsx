@@ -25,7 +25,9 @@ import {
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { getCategory, updateCategory } from "@/lib/api";
+import { categoriesControllerGetById } from "@/lib/api/categories/categories-controller-get-by-id";
+import { categoriesControllerUpdate } from "@/lib/api/categories/categories-controller-update";
+import { kubbClientConfig } from "@/lib/kubb-client";
 
 export default function EditCategoryPage() {
   const params = useParams();
@@ -61,7 +63,7 @@ export default function EditCategoryPage() {
     async function loadCategory() {
       try {
         setIsLoading(true);
-        const data = await getCategory(id);
+        const data = await categoriesControllerGetById(id, kubbClientConfig);
         setCategory(data);
 
         // Set form values
@@ -123,7 +125,7 @@ export default function EditCategoryPage() {
         icon: icon || undefined,
       };
 
-      await updateCategory(id, categoryData);
+      await categoriesControllerUpdate(id, categoryData as any, kubbClientConfig);
 
       toast({
         title: "Categoria atualizada",

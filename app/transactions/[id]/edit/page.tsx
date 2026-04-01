@@ -28,7 +28,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { getTransaction, updateTransaction } from "@/lib/api";
+import { transactionsControllerGetById } from "@/lib/api/transactions/transactions-controller-get-by-id";
+import { transactionsControllerUpdate } from "@/lib/api/transactions/transactions-controller-update";
+import { kubbClientConfig } from "@/lib/kubb-client";
 import { useCategories } from "@/hooks/use-categories";
 
 export default function EditTransactionPage() {
@@ -70,7 +72,7 @@ export default function EditTransactionPage() {
     async function loadTransaction() {
       try {
         setIsLoading(true);
-        const data = await getTransaction(id);
+        const data = await transactionsControllerGetById(id, kubbClientConfig);
         setTransaction(data);
 
         // Set form values
@@ -125,7 +127,7 @@ export default function EditTransactionPage() {
         notes: notes || undefined,
       };
 
-      await updateTransaction(id, transactionData);
+      await transactionsControllerUpdate(id, transactionData as any, kubbClientConfig);
 
       toast({
         title: "Transação atualizada",

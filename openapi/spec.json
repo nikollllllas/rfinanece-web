@@ -1,0 +1,1139 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/v1": {
+      "get": {
+        "operationId": "AppController_getHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "status": "ok"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login realizado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "accessToken": "jwt.token.value",
+                    "user": {
+                      "id": "uuid",
+                      "name": "Administrador",
+                      "email": "admin@rfinance.local",
+                      "role": "ADMIN"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais inválidas"
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "success": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Dados do usuário autenticado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "user": {
+                      "id": "uuid",
+                      "name": "Administrador",
+                      "email": "admin@rfinance.local",
+                      "role": "ADMIN"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/categories": {
+      "get": {
+        "operationId": "CategoriesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": [
+                    {
+                      "id": "uuid",
+                      "name": "Alimentação",
+                      "color": "#22C55E",
+                      "icon": "food",
+                      "type": "GASTO",
+                      "isDefault": false,
+                      "userId": "uuid"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "categories"
+        ]
+      },
+      "post": {
+        "operationId": "CategoriesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Categoria criada com sucesso"
+          },
+          "401": {
+            "description": "Não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para executar esta ação"
+          },
+          "409": {
+            "description": "Uma categoria com este nome já existe"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "categories"
+        ]
+      }
+    },
+    "/v1/categories/{id}": {
+      "get": {
+        "operationId": "CategoriesController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "id": "uuid",
+                    "name": "Alimentação",
+                    "color": "#22C55E",
+                    "icon": "food",
+                    "type": "GASTO",
+                    "isDefault": false,
+                    "userId": "uuid"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado"
+          },
+          "404": {
+            "description": "Categoria não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "categories"
+        ]
+      },
+      "put": {
+        "operationId": "CategoriesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Categoria atualizada com sucesso"
+          },
+          "401": {
+            "description": "Não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para executar esta ação"
+          },
+          "404": {
+            "description": "Categoria não encontrada"
+          },
+          "409": {
+            "description": "Uma categoria com este nome já existe"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "categories"
+        ]
+      },
+      "delete": {
+        "operationId": "CategoriesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Categoria excluída com sucesso"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para executar esta ação"
+          },
+          "404": {
+            "description": "Categoria não encontrada"
+          },
+          "409": {
+            "description": "Categoria possui dependências"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "categories"
+        ]
+      }
+    },
+    "/v1/transactions": {
+      "get": {
+        "operationId": "TransactionsController_list",
+        "parameters": [
+          {
+            "name": "month",
+            "required": false,
+            "in": "query",
+            "description": "Formato YYYY-MM",
+            "schema": {
+              "example": "2026-03",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "transactions": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Formato de mês inválido (YYYY-MM)"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "transactions"
+        ]
+      },
+      "post": {
+        "operationId": "TransactionsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTransactionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "transactions": []
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Categoria não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
+    "/v1/transactions/months": {
+      "get": {
+        "operationId": "TransactionsController_listMonths",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": [
+                    "2026-03",
+                    "2026-02"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
+    "/v1/transactions/{id}": {
+      "get": {
+        "operationId": "TransactionsController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transação encontrada"
+          },
+          "404": {
+            "description": "Transação não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "transactions"
+        ]
+      },
+      "put": {
+        "operationId": "TransactionsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTransactionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transação atualizada"
+          },
+          "404": {
+            "description": "Transação ou categoria não encontrada"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "transactions"
+        ]
+      },
+      "delete": {
+        "operationId": "TransactionsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Transação apagada com sucesso"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "transactions"
+        ]
+      }
+    },
+    "/v1/budgets": {
+      "post": {
+        "operationId": "BudgetsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBudgetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Orçamento criado com sucesso"
+          },
+          "404": {
+            "description": "Categoria não encontrada"
+          },
+          "409": {
+            "description": "Já existe um orçamento para essa categoria neste mês"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "budgets"
+        ]
+      },
+      "get": {
+        "operationId": "BudgetsController_list",
+        "parameters": [
+          {
+            "name": "month",
+            "required": false,
+            "in": "query",
+            "description": "Formato YYYY-MM",
+            "schema": {
+              "example": "2026-03",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": []
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "budgets"
+        ]
+      },
+      "put": {
+        "operationId": "BudgetsController_replicate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplicateBudgetsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Orçamentos replicados"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "budgets"
+        ]
+      }
+    },
+    "/v1/budgets/{id}": {
+      "get": {
+        "operationId": "BudgetsController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Orçamento encontrado"
+          },
+          "404": {
+            "description": "Orçamento não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "budgets"
+        ]
+      },
+      "put": {
+        "operationId": "BudgetsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBudgetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Orçamento atualizado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "budgets"
+        ]
+      },
+      "delete": {
+        "operationId": "BudgetsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Orçamento apagado com sucesso"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "budgets"
+        ]
+      }
+    },
+    "/v1/budgets/{id}/progress": {
+      "get": {
+        "operationId": "BudgetsController_progress",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Progresso do orçamento do mês"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "budgets"
+        ]
+      }
+    },
+    "/v1/dashboard": {
+      "get": {
+        "operationId": "DashboardController_getSummary",
+        "parameters": [
+          {
+            "name": "month",
+            "required": false,
+            "in": "query",
+            "description": "Formato YYYY-MM",
+            "schema": {
+              "example": "2026-03",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "summary": {
+                      "income": {
+                        "amount": 0,
+                        "change": 0
+                      },
+                      "expenses": {
+                        "amount": 0,
+                        "change": 0
+                      },
+                      "savings": {
+                        "amount": 0,
+                        "change": 0
+                      },
+                      "balance": 0
+                    },
+                    "expensesByCategory": [],
+                    "recentTransactions": [],
+                    "budgets": [],
+                    "monthlyData": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Formato de mês inválido (YYYY-MM)"
+          },
+          "401": {
+            "description": "Não autenticado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "dashboard"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "RFinance API",
+    "description": "API versionada para gestão financeira",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "admin@rfinance.local"
+          },
+          "password": {
+            "type": "string",
+            "example": "Admin@123"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "CreateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Alimentação"
+          },
+          "color": {
+            "type": "string",
+            "example": "#22C55E"
+          },
+          "icon": {
+            "type": "string",
+            "example": "food"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "GANHO",
+              "GASTO",
+              "AMBOS"
+            ],
+            "example": "GASTO"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "example": false,
+            "default": false
+          }
+        },
+        "required": [
+          "name",
+          "color"
+        ]
+      },
+      "UpdateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Alimentação"
+          },
+          "color": {
+            "type": "string",
+            "example": "#22C55E"
+          },
+          "icon": {
+            "type": "string",
+            "example": "food"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "GANHO",
+              "GASTO",
+              "AMBOS"
+            ],
+            "example": "GASTO"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "example": false,
+            "default": false
+          }
+        }
+      },
+      "CreateTransactionDto": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "example": "Supermercado"
+          },
+          "amount": {
+            "type": "number",
+            "example": 145.9
+          },
+          "date": {
+            "type": "string",
+            "example": "2026-03-31T00:00:00.000Z"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "GANHO",
+              "GASTO"
+            ],
+            "example": "GASTO"
+          },
+          "categoryId": {
+            "type": "string",
+            "example": "uuid-category"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Compra mensal"
+          },
+          "tag": {
+            "type": "string",
+            "enum": [
+              "FALTA",
+              "PAGO",
+              "DEVOLVER",
+              "ECONOMIA"
+            ],
+            "nullable": true
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "PIX",
+              "DEBITO",
+              "CREDITO"
+            ],
+            "nullable": true
+          },
+          "installmentCount": {
+            "type": "number",
+            "example": 3,
+            "minimum": 2,
+            "maximum": 12
+          }
+        },
+        "required": [
+          "description",
+          "amount",
+          "date",
+          "type",
+          "categoryId"
+        ]
+      },
+      "UpdateTransactionDto": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "example": "Supermercado"
+          },
+          "amount": {
+            "type": "number",
+            "example": 145.9
+          },
+          "date": {
+            "type": "string",
+            "example": "2026-03-31T00:00:00.000Z"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "GANHO",
+              "GASTO"
+            ],
+            "example": "GASTO"
+          },
+          "categoryId": {
+            "type": "string",
+            "example": "uuid-category"
+          },
+          "notes": {
+            "type": "string",
+            "example": "Compra mensal"
+          },
+          "tag": {
+            "type": "string",
+            "enum": [
+              "FALTA",
+              "PAGO",
+              "DEVOLVER",
+              "ECONOMIA"
+            ],
+            "nullable": true
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "PIX",
+              "DEBITO",
+              "CREDITO"
+            ],
+            "nullable": true
+          },
+          "installmentCount": {
+            "type": "number",
+            "example": 3,
+            "minimum": 2,
+            "maximum": 12
+          }
+        }
+      },
+      "CreateBudgetDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "example": 1200.5
+          },
+          "budgetMonth": {
+            "type": "string",
+            "example": "2026-03"
+          },
+          "categoryId": {
+            "type": "string",
+            "example": "uuid-category"
+          }
+        },
+        "required": [
+          "amount",
+          "budgetMonth",
+          "categoryId"
+        ]
+      },
+      "ReplicateBudgetsDto": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "example": "replicate"
+          },
+          "targetMonth": {
+            "type": "string",
+            "example": "2026-04"
+          }
+        },
+        "required": [
+          "action",
+          "targetMonth"
+        ]
+      },
+      "UpdateBudgetDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "example": 1200.5
+          },
+          "budgetMonth": {
+            "type": "string",
+            "example": "2026-03"
+          },
+          "categoryId": {
+            "type": "string",
+            "example": "uuid-category"
+          }
+        }
+      }
+    }
+  }
+}

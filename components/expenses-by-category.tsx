@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from "recharts";
 import { Loader2 } from "lucide-react";
-import { DashboardData } from "@/lib/api";
+import { DashboardData } from "@/lib/api-types";
 import { formatCurrency } from "@/lib/utils";
 
 interface ExpensesByCategoryProps {
@@ -62,7 +62,7 @@ export default function ExpensesByCategory({dashboardData, isLoading, error}: Ex
             `${name} ${(percent * 100).toFixed(0)}%`
           }
         >
-          {dashboardData.expensesByCategory.map((entry, index) => (
+          {dashboardData.expensesByCategory.map((entry: any, index: number) => (
             <Cell key={`cell-${index}`} fill={entry.color} />
           ))}
         </Pie>

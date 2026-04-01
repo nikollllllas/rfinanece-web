@@ -18,7 +18,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories } from "@/hooks/use-categories";
-import { getTransaction, updateTransaction } from "@/lib/api";
+import { useTransactionsControllerGetById } from "@/lib/api/transactions/hooks/use-transactions-controller-get-by-id";
+import { useTransactionsControllerUpdate } from "@/lib/api/transactions/hooks/use-transactions-controller-update";
+import { kubbClientConfig } from "@/lib/kubb-client";
 import {
   getInstallmentSuffix,
   getPaymentMethodLabel,
@@ -48,6 +50,13 @@ export function TransactionEditDialog({
 }: TransactionEditDialogProps) {
   const { toast } = useToast();
   const { categories, isLoading: categoriesLoading } = useCategories();
+  const updateMutation = useTransactionsControllerUpdate({
+    client: kubbClientConfig,
+  });
+  const transactionQuery = useTransactionsControllerGetById(transactionId, {
+    query: { enabled: open && Boolean(transactionId) },
+    client: kubbClientConfig,
+  });
 
   const [transaction, setTransaction] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -67,39 +76,33 @@ export function TransactionEditDialog({
   >(null);
 
   useEffect(() => {
-    if (!open || !transactionId) return;
+    if (!transactionQuery.data) return;
+    const data = transactionQuery.data as any;
+    setTransaction(data);
+    setTransactionType(data.type);
+    setDescription(data.description);
+    setAmount(String(data.amount));
+    setDate(new Date(data.date));
+    setCategoryId(data.categoryId);
+    setNotes(data.notes || "");
+    setTag(data.tag || null);
+    setError(null);
+    setIsLoading(false);
+  }, [transactionQuery.data]);
 
-    async function loadTransaction() {
-      try {
-        setIsLoading(true);
-        const data = await getTransaction(transactionId);
-        setTransaction(data);
-
-        // Set form values
-        setTransactionType(data.type);
-        setDescription(data.description);
-        setAmount(String(data.amount));
-        setDate(new Date(data.date));
-        setCategoryId(data.categoryId);
-        setNotes(data.notes || "");
-        setTag(data.tag || null);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Falha ao carregar transação")
-        );
-        toast({
-          title: "Erro",
-          description: "Falha ao carregar detalhes da transação",
-          variant: "destructive",
-        });
-        onOpenChange(false);
-      } finally {
-        setIsLoading(false);
-      }
+  useEffect(() => {
+    if (!open) return;
+    setIsLoading(transactionQuery.isLoading);
+    if (transactionQuery.error) {
+      setError(transactionQuery.error as Error);
+      toast({
+        title: "Erro",
+        description: "Falha ao carregar detalhes da transação",
+        variant: "destructive",
+      });
+      onOpenChange(false);
     }
-
-    loadTransaction();
-  }, [transactionId, open, toast, onOpenChange]);
+  }, [open, transactionQuery.isLoading, transactionQuery.error, toast, onOpenChange]);
 
   const filteredCategories = categories.filter(
     (category) => category.type === transactionType || category.type === "AMBOS"
@@ -130,7 +133,10 @@ export function TransactionEditDialog({
         tag: tag || null,
       };
 
-      await updateTransaction(transactionId, transactionData);
+      await updateMutation.mutateAsync({
+        id: transactionId,
+        data: transactionData as any,
+      });
 
       toast({
         title: "Transação atualizada",

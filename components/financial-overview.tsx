@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Loader2 } from "lucide-react";
-import { DashboardData } from "@/lib/api";
+import { DashboardData } from "@/lib/api-types";
 import { formatCurrency } from "@/lib/utils";
 
 interface FinancialOverviewProps {

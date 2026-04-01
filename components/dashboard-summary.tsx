@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatChange } from "@/lib/utils";
-import { DashboardData } from "@/lib/api";
+import { DashboardData } from "@/lib/api-types";
 
 interface DashboardSummaryProps {
   dashboardData: DashboardData | null;

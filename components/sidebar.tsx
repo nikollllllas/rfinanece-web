@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button"
 import { useMediaQuery } from "@/hooks/use-mobile"
 import { TransactionCreateDialog } from "@/components/transaction-create-dialog"
 import { BudgetCreateDialog } from "@/components/budget-create-dialog"
+import { useAuthControllerMe } from "@/lib/api/auth/hooks/use-auth-controller-me"
+import { useAuthControllerLogout } from "@/lib/api/auth/hooks/use-auth-controller-logout"
+import { kubbClientConfig } from "@/lib/kubb-client"
 
 const routes = [
   {
@@ -37,12 +40,26 @@ const routes = [
   },
 ]
 
+type AuthUser = {
+  id: string
+  name: string
+  email: string
+  role: "ADMIN" | "USER"
+}
+
 export default function Sidebar() {
   const pathname = usePathname()
   const isMobile = useMediaQuery("(max-width: 768px)")
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isBudgetDialogOpen, setBudgetDialogOpen] = useState(false)
+  const meQuery = useAuthControllerMe({
+    client: kubbClientConfig,
+  })
+  const logoutMutation = useAuthControllerLogout({
+    client: kubbClientConfig,
+  })
+  const user = (meQuery.data?.user ?? null) as AuthUser | null
 
   useEffect(() => {
     const savedState = localStorage.getItem("sidebarCollapsed")
@@ -107,7 +124,9 @@ export default function Sidebar() {
           </div>
 
           <div className="space-y-1">
-            {routes.map((route) => (
+            {routes
+              .filter((route) => (route.href === "/categories" ? user?.role === "ADMIN" : true))
+              .map((route) => (
               <Link
                 key={route.href}
                 href={route.href}
@@ -130,6 +149,17 @@ export default function Sidebar() {
             >
               <Plus className="h-4 w-4" />
               {!isCollapsed && <span className="ml-2">Nova Transação</span>}
+            </Button>
+            <Button
+              variant="outline"
+              className={cn("mt-2 w-full justify-start", isCollapsed && "justify-center px-0")}
+              onClick={async () => {
+                await logoutMutation.mutateAsync()
+                window.location.href = "/login"
+              }}
+            >
+              {!isCollapsed && <span>Sair</span>}
+              {isCollapsed && <span>⎋</span>}
             </Button>
           </div>
         </div>

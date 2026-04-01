@@ -1,31 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useTransactionsControllerListMonths } from "@/lib/api/transactions/hooks/use-transactions-controller-list-months"
+import { kubbClientConfig } from "@/lib/kubb-client"
 
 export function useAvailableMonths() {
-  const [months, setMonths] = useState<string[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
+  const monthsQuery = useTransactionsControllerListMonths({
+    client: kubbClientConfig,
+  })
 
-  useEffect(() => {
-    const fetchMonths = async () => {
-      try {
-        setIsLoading(true)
-        const response = await fetch('/api/transactions/months')
-        if (!response.ok) {
-          throw new Error('Failed to fetch available months')
-        }
-        const data = await response.json()
-        setMonths(data)
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error("An unknown error occurred"))
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchMonths()
-  }, [])
-
-  return { months, isLoading, error }
+  return {
+    months: (monthsQuery.data ?? []) as string[],
+    isLoading: monthsQuery.isLoading,
+    error: monthsQuery.error as Error | null,
+  }
 }

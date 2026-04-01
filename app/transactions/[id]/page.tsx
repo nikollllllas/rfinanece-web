@@ -20,7 +20,9 @@ import {
   getPaymentMethodLabel,
 } from "@/lib/installment-utils";
 import { useToast } from "@/hooks/use-toast";
-import { getTransaction, deleteTransaction } from "@/lib/api";
+import { transactionsControllerGetById } from "@/lib/api/transactions/transactions-controller-get-by-id";
+import { transactionsControllerRemove } from "@/lib/api/transactions/transactions-controller-remove";
+import { kubbClientConfig } from "@/lib/kubb-client";
 import { useCategories } from "@/hooks/use-categories";
 import {
   AlertDialog,
@@ -63,7 +65,7 @@ export default function TransactionDetailsPage() {
     async function loadTransaction() {
       try {
         setIsLoading(true);
-        const data = await getTransaction(id);
+        const data = await transactionsControllerGetById(id, kubbClientConfig);
         setTransaction(data);
       } catch (err) {
         setError(
@@ -87,7 +89,7 @@ export default function TransactionDetailsPage() {
 
     try {
       setIsDeleting(true);
-      await deleteTransaction(id);
+      await transactionsControllerRemove(id, kubbClientConfig);
       toast({
         title: "Sucesso",
         description: "Transação excluída com sucesso",

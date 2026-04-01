@@ -6,7 +6,7 @@ import {
   getInstallmentSuffix,
   getPaymentMethodLabel,
 } from "@/lib/installment-utils";
-import { DashboardData } from "@/lib/api";
+import { DashboardData } from "@/lib/api-types";
 
 interface RecentTransactionsProps {
   dashboardData: DashboardData | null;
@@ -44,7 +44,7 @@ export default function RecentTransactions({dashboardData, isLoading, error}: Re
 
   return (
     <div className="space-y-4">
-      {recentTransactions.map((transaction) => {
+      {recentTransactions.map((transaction: any) => {
         const installmentSuffix = getInstallmentSuffix(
           transaction.installmentIndex,
           transaction.installmentCount

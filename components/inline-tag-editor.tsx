@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { updateTransaction } from "@/lib/api";
+import { useTransactionsControllerUpdate } from "@/lib/api/transactions/hooks/use-transactions-controller-update";
+import { kubbClientConfig } from "@/lib/kubb-client";
 
 interface InlineTagEditorProps {
   transactionId: string;
@@ -28,6 +29,9 @@ export function InlineTagEditor({
   const [isOpen, setIsOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
+  const updateMutation = useTransactionsControllerUpdate({
+    client: kubbClientConfig,
+  });
 
   const tagOptions = [
     { value: null, label: "Sem status", variant: "gray" },
@@ -62,7 +66,10 @@ export function InlineTagEditor({
 
     setIsUpdating(true);
     try {
-      await updateTransaction(transactionId, { tag: newTag });
+      await updateMutation.mutateAsync({
+        id: transactionId,
+        data: { tag: newTag } as any,
+      });
 
       toast({
         title: "Status atualizado",

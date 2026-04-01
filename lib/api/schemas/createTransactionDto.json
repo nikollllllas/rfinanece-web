@@ -1,0 +1,33 @@
+{
+	"type": "object",
+	"properties": {
+		"description": { "type": "string", "example": "Supermercado" },
+		"amount": { "type": "number", "example": 145.9 },
+		"date": { "type": "string", "example": "2026-03-31T00:00:00.000Z" },
+		"type": {
+			"type": "string",
+			"enum": ["GANHO", "GASTO"],
+			"example": "GASTO"
+		},
+		"categoryId": { "type": "string", "example": "uuid-category" },
+		"notes": { "type": "string", "example": "Compra mensal" },
+		"tag": {
+			"type": "string",
+			"enum": ["FALTA", "PAGO", "DEVOLVER", "ECONOMIA"],
+			"nullable": true
+		},
+		"paymentMethod": {
+			"type": "string",
+			"enum": ["PIX", "DEBITO", "CREDITO"],
+			"nullable": true
+		},
+		"installmentCount": {
+			"type": "number",
+			"example": 3,
+			"minimum": 2,
+			"maximum": 12
+		}
+	},
+	"required": ["description", "amount", "date", "type", "categoryId"],
+	"x-readme-ref-name": "CreateTransactionDto"
+}

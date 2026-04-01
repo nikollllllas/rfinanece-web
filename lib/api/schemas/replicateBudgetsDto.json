@@ -1,0 +1,9 @@
+{
+	"type": "object",
+	"properties": {
+		"action": { "type": "string", "example": "replicate" },
+		"targetMonth": { "type": "string", "example": "2026-04" }
+	},
+	"required": ["action", "targetMonth"],
+	"x-readme-ref-name": "ReplicateBudgetsDto"
+}

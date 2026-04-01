@@ -1,43 +1,32 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
-import { type Budget, getBudgets, createBudget, updateBudget, deleteBudget, replicateBudgets, type BudgetData } from "@/lib/api"
+import { useCallback } from "react"
+import { type Budget, type BudgetData } from "@/lib/api-types"
+import { useBudgetsControllerList } from "@/lib/api/budgets/hooks/use-budgets-controller-list"
+import { useBudgetsControllerCreate } from "@/lib/api/budgets/hooks/use-budgets-controller-create"
+import { useBudgetsControllerUpdate } from "@/lib/api/budgets/hooks/use-budgets-controller-update"
+import { useBudgetsControllerRemove } from "@/lib/api/budgets/hooks/use-budgets-controller-remove"
+import { useBudgetsControllerReplicate } from "@/lib/api/budgets/hooks/use-budgets-controller-replicate"
+import { useBudgetsControllerProgress } from "@/lib/api/budgets/hooks/use-budgets-controller-progress"
+import { kubbClientConfig } from "@/lib/kubb-client"
 import { useToast } from "@/hooks/use-toast"
 
 export function useBudgets() {
-  const [budgets, setBudgets] = useState<Budget[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
   const { toast } = useToast()
-
-  const fetchBudgets = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const data = await getBudgets()
-      setBudgets(data)
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error("An unknown error occurred"))
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Failed to fetch budgets",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }, [toast])
-
-  useEffect(() => {
-    fetchBudgets()
-  }, [])
+  const budgetsQuery = useBudgetsControllerList(undefined, {
+    client: kubbClientConfig,
+  })
+  const createMutation = useBudgetsControllerCreate({ client: kubbClientConfig })
+  const updateMutation = useBudgetsControllerUpdate({ client: kubbClientConfig })
+  const removeMutation = useBudgetsControllerRemove({ client: kubbClientConfig })
+  const replicateMutation = useBudgetsControllerReplicate({ client: kubbClientConfig })
+  const budgets = (budgetsQuery.data ?? []) as Budget[]
 
   const addBudget = useCallback(
     async (data: BudgetData) => {
       try {
-        const newBudget = await createBudget(data)
-        setBudgets((prev) => [...prev, newBudget])
+        const newBudget = await createMutation.mutateAsync({ data })
+        await budgetsQuery.refetch()
         toast({
           title: "Sucesso",
           description: "Orçamento criado com sucesso",
@@ -52,14 +41,14 @@ export function useBudgets() {
         throw err
       }
     },
-    [toast],
+    [createMutation, budgetsQuery, toast],
   )
 
   const editBudget = useCallback(
     async (id: string, data: Partial<BudgetData>) => {
       try {
-        const updatedBudget = await updateBudget(id, data)
-        setBudgets((prev) => prev.map((budget) => (budget.id === id ? updatedBudget : budget)))
+        const updatedBudget = await updateMutation.mutateAsync({ id, data })
+        await budgetsQuery.refetch()
         toast({
           title: "Sucesso",
           description: "Orçamento atualizado com sucesso",
@@ -74,14 +63,14 @@ export function useBudgets() {
         throw err
       }
     },
-    [toast],
+    [updateMutation, budgetsQuery, toast],
   )
 
   const removeBudget = useCallback(
     async (id: string) => {
       try {
-        await deleteBudget(id)
-        setBudgets((prev) => prev.filter((budget) => budget.id !== id))
+        await removeMutation.mutateAsync({ id })
+        await budgetsQuery.refetch()
         toast({
           title: "Sucesso",
           description: "Orçamento excluído com sucesso",
@@ -95,19 +84,21 @@ export function useBudgets() {
         throw err
       }
     },
-    [toast],
+    [removeMutation, budgetsQuery, toast],
   )
 
   const replicateBudgetsFromPreviousMonth = useCallback(
     async (targetMonth: string) => {
       try {
-        const result = await replicateBudgets(targetMonth)
-        setBudgets((prev) => [...prev, ...result.budgets])
+        const result = await replicateMutation.mutateAsync({
+          data: { action: "replicate", targetMonth },
+        })
+        await budgetsQuery.refetch()
         toast({
           title: "Sucesso!",
           description: result.message,
         })
-        return result.budgets
+        return (result.budgets ?? []) as Budget[]
       } catch (err) {
         toast({
           title: "Erro...",
@@ -117,14 +108,16 @@ export function useBudgets() {
         throw err
       }
     },
-    [toast],
+    [replicateMutation, budgetsQuery, toast],
   )
 
   return {
     budgets,
-    isLoading,
-    error,
-    refreshBudgets: fetchBudgets,
+    isLoading: budgetsQuery.isLoading,
+    error: (budgetsQuery.error as Error | null) ?? null,
+    refreshBudgets: async () => {
+      await budgetsQuery.refetch()
+    },
     addBudget,
     editBudget,
     removeBudget,
@@ -138,41 +131,29 @@ export function useBudgets() {
 }
 
 export function useBudgetProgress(budgetId: string) {
-  const [progress, setProgress] = useState<{ current: number; percentage: number; isOverBudget: boolean }>({
-    current: 0,
-    percentage: 0,
-    isOverBudget: false,
+  const progressQuery = useBudgetsControllerProgress(budgetId, {
+    query: {
+      enabled: Boolean(budgetId),
+    },
+    client: kubbClientConfig,
   })
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
+  const progressData = (progressQuery.data ?? { current: 0, max: 0 }) as {
+    current: number
+    max: number
+  }
+  const percentage =
+    progressData.max > 0
+      ? Math.min(Math.round((progressData.current / progressData.max) * 100), 100)
+      : 0
 
-  const fetchBudgetProgress = useCallback(async () => {
-    if (!budgetId) return
-    
-    setIsLoading(true)
-    setError(null)
-    try {
-      const response = await fetch(`/api/budgets/${budgetId}/progress`)
-      if (!response.ok) {
-        throw new Error("Failed to fetch budget progress")
-      }
-      const data = await response.json()
-      setProgress({
-        current: data.current,
-        percentage: Math.min(Math.round((data.current / data.max) * 100), 100),
-        isOverBudget: data.current > data.max,
-      })
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error("An unknown error occurred"))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [budgetId])
-
-  useEffect(() => {
-    fetchBudgetProgress()
-  }, [fetchBudgetProgress])
-
-  return { progress, isLoading, error }
+  return {
+    progress: {
+      current: progressData.current ?? 0,
+      percentage,
+      isOverBudget: (progressData.current ?? 0) > (progressData.max ?? 0),
+    },
+    isLoading: progressQuery.isLoading,
+    error: (progressQuery.error as Error | null) ?? null,
+  }
 }
 

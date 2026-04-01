@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useCategories } from "@/hooks/use-categories"
-import { createBudget } from "@/lib/api"
+import { budgetsControllerCreate } from "@/lib/api/budgets/budgets-controller-create"
+import { kubbClientConfig } from "@/lib/kubb-client"
 import {
   Dialog,
   DialogContent,
@@ -56,7 +57,7 @@ export function BudgetCreateDialog({ open, onOpenChange, onSuccess }: BudgetCrea
         categoryId,
       }
 
-      await createBudget(budgetData)
+      await budgetsControllerCreate(budgetData as any, kubbClientConfig)
 
       toast({
         title: "Orçamento criado",

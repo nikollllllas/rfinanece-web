@@ -1,50 +1,36 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
-import {
-  type Category,
-  getCategories,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-  type CategoryData,
-} from "@/lib/api"
+import { useCallback } from "react"
+import { type Category, type CategoryData } from "@/lib/api-types"
+import { useCategoriesControllerList } from "@/lib/api/categories/hooks/use-categories-controller-list"
+import { useCategoriesControllerCreate } from "@/lib/api/categories/hooks/use-categories-controller-create"
+import { useCategoriesControllerUpdate } from "@/lib/api/categories/hooks/use-categories-controller-update"
+import { useCategoriesControllerRemove } from "@/lib/api/categories/hooks/use-categories-controller-remove"
+import { kubbClientConfig } from "@/lib/kubb-client"
 import { useToast } from "@/hooks/use-toast"
 
 export function useCategories() {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
   const { toast } = useToast()
+  const categoriesQuery = useCategoriesControllerList({
+    client: kubbClientConfig,
+  })
+  const createMutation = useCategoriesControllerCreate({
+    client: kubbClientConfig,
+  })
+  const updateMutation = useCategoriesControllerUpdate({
+    client: kubbClientConfig,
+  })
+  const removeMutation = useCategoriesControllerRemove({
+    client: kubbClientConfig,
+  })
 
-  const fetchCategories = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const data = await getCategories()
-      setCategories(data)
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error("An unknown error occurred"))
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Failed to fetch categories",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }, [toast])
-
-  useEffect(() => {
-    fetchCategories()
-  }, [fetchCategories])
+  const categories = (categoriesQuery.data ?? []) as Category[]
 
   const addCategory = useCallback(
     async (data: CategoryData) => {
       try {
-        const newCategory = await createCategory(data)
-        setCategories((prev) => [...prev, newCategory])
+        const newCategory = await createMutation.mutateAsync({ data })
+        await categoriesQuery.refetch()
         toast({
           title: "Success",
           description: "Category created successfully",
@@ -59,14 +45,14 @@ export function useCategories() {
         throw err
       }
     },
-    [toast],
+    [createMutation, categoriesQuery, toast],
   )
 
   const editCategory = useCallback(
     async (id: string, data: Partial<CategoryData>) => {
       try {
-        const updatedCategory = await updateCategory(id, data)
-        setCategories((prev) => prev.map((category) => (category.id === id ? updatedCategory : category)))
+        const updatedCategory = await updateMutation.mutateAsync({ id, data })
+        await categoriesQuery.refetch()
         toast({
           title: "Success",
           description: "Category updated successfully",
@@ -81,14 +67,14 @@ export function useCategories() {
         throw err
       }
     },
-    [toast],
+    [updateMutation, categoriesQuery, toast],
   )
 
   const removeCategory = useCallback(
     async (id: string) => {
       try {
-        await deleteCategory(id)
-        setCategories((prev) => prev.filter((category) => category.id !== id))
+        await removeMutation.mutateAsync({ id })
+        await categoriesQuery.refetch()
         toast({
           title: "Success",
           description: "Category deleted successfully",
@@ -102,14 +88,16 @@ export function useCategories() {
         throw err
       }
     },
-    [toast],
+    [removeMutation, categoriesQuery, toast],
   )
 
   return {
     categories,
-    isLoading,
-    error,
-    refreshCategories: fetchCategories,
+    isLoading: categoriesQuery.isLoading,
+    error: (categoriesQuery.error as Error | null) ?? null,
+    refreshCategories: async () => {
+      await categoriesQuery.refetch()
+    },
     addCategory,
     editCategory,
     removeCategory,

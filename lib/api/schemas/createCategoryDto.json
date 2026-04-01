@@ -1,0 +1,16 @@
+{
+	"type": "object",
+	"properties": {
+		"name": { "type": "string", "example": "Alimentação" },
+		"color": { "type": "string", "example": "#22C55E" },
+		"icon": { "type": "string", "example": "food" },
+		"type": {
+			"type": "string",
+			"enum": ["GANHO", "GASTO", "AMBOS"],
+			"example": "GASTO"
+		},
+		"isDefault": { "type": "boolean", "example": false, "default": false }
+	},
+	"required": ["name", "color"],
+	"x-readme-ref-name": "CreateCategoryDto"
+}

@@ -1,7 +1,18 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { ApiError } from "@/lib/api"
+
+class ApiError extends Error {
+  status: number
+  details?: unknown
+
+  constructor(message: string, status: number, details?: unknown) {
+    super(message)
+    this.name = "ApiError"
+    this.status = status
+    this.details = details
+  }
+}
 
 interface UseApiOptions<T> {
   onSuccess?: (data: T) => void

@@ -2,8 +2,10 @@
 
 import type React from "react";
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { getDashboardData, type DashboardData } from "@/lib/api";
+import { createContext, useContext, useState, useCallback } from "react";
+import { type DashboardData } from "@/lib/api-types";
+import { useDashboardControllerGetSummary } from "@/lib/api/dashboard/hooks/use-dashboard-controller-get-summary";
+import { kubbClientConfig } from "@/lib/kubb-client";
 import { useToast } from "@/hooks/use-toast";
 
 interface DashboardContextType {
@@ -27,50 +29,34 @@ const DashboardContext = createContext<DashboardContextType>({
 export const useDashboard = () => useContext(DashboardContext);
 
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
-    null
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date()
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   });
   const { toast } = useToast();
-
+  const dashboardQuery = useDashboardControllerGetSummary(
+    { month: selectedMonth },
+    { client: kubbClientConfig },
+  );
   const fetchDashboardData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
     try {
-      const queryParams = `?month=${selectedMonth}`;
-      const data = await getDashboardData(queryParams);
-      setDashboardData(data);
+      await dashboardQuery.refetch();
     } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error("An unknown error occurred")
-      );
       toast({
         title: "Error",
         description:
           err instanceof Error ? err.message : "Failed to fetch dashboard data",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
-  }, [selectedMonth, toast]);
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+  }, [dashboardQuery, toast]);
 
   return (
     <DashboardContext.Provider
       value={{
-        dashboardData,
-        isLoading,
-        error,
+        dashboardData: (dashboardQuery.data ?? null) as DashboardData | null,
+        isLoading: dashboardQuery.isLoading,
+        error: (dashboardQuery.error as Error | null) ?? null,
         selectedMonth,
         refreshDashboardData: fetchDashboardData,
         setSelectedMonth,

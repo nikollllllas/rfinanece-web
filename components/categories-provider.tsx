@@ -2,7 +2,9 @@
 
 import type React from "react";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext } from "react";
+import { useCategoriesControllerList } from "@/lib/api/categories/hooks/use-categories-controller-list";
+import { kubbClientConfig } from "@/lib/kubb-client";
 
 interface Category {
   id: string;
@@ -33,36 +35,15 @@ export function CategoriesProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
+  const categoriesQuery = useCategoriesControllerList({
+    client: kubbClientConfig,
+  });
+  const categories = (categoriesQuery.data ?? []) as Category[];
+  const isLoading = categoriesQuery.isLoading;
+  const error = (categoriesQuery.error as Error | null) ?? null;
   const fetchCategories = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch("/api/categories");
-
-      if (!response.ok) {
-        throw new Error("Falha ao carregar categorias");
-      }
-
-      const data = await response.json();
-      setCategories(data);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error("Um erro desconhecido aconteceu")
-      );
-      console.error("Erro ao carregar categorisa:", err);
-    } finally {
-      setIsLoading(false);
-    }
+    await categoriesQuery.refetch();
   };
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
 
   return (
     <CategoriesContext.Provider

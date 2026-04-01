@@ -25,7 +25,8 @@ import {
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import { createCategory } from "@/lib/api";
+import { categoriesControllerCreate } from "@/lib/api/categories/categories-controller-create";
+import { kubbClientConfig } from "@/lib/kubb-client";
 
 export default function NewCategoryPage() {
   const router = useRouter();
@@ -48,7 +49,7 @@ export default function NewCategoryPage() {
         isDefault: false,
       };
 
-      await createCategory(categoryData);
+      await categoriesControllerCreate(categoryData as any, kubbClientConfig);
 
       toast({
         title: "Categoria criada",

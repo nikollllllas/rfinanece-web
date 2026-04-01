@@ -15,7 +15,9 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getCategory, updateCategory } from "@/lib/api";
+import { categoriesControllerGetById } from "@/lib/api/categories/categories-controller-get-by-id";
+import { categoriesControllerUpdate } from "@/lib/api/categories/categories-controller-update";
+import { kubbClientConfig } from "@/lib/kubb-client";
 import {
   Dialog,
   DialogContent,
@@ -58,7 +60,7 @@ export function CategoryEditDialog({
     async function loadCategory() {
       try {
         setIsLoading(true);
-        const data = await getCategory(categoryId);
+        const data = await categoriesControllerGetById(categoryId, kubbClientConfig);
         setCategory(data);
 
         // Set form values
@@ -121,7 +123,7 @@ export function CategoryEditDialog({
         icon: icon || undefined,
       };
 
-      await updateCategory(categoryId, categoryData);
+      await categoriesControllerUpdate(categoryId, categoryData as any, kubbClientConfig);
 
       toast({
         title: "Categoria atualizada",

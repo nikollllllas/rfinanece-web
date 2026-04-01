@@ -2,7 +2,7 @@
 
 import { Progress } from "@/components/ui/progress";
 import { Loader2 } from "lucide-react";
-import { DashboardData } from "@/lib/api";
+import { DashboardData } from "@/lib/api-types";
 import { formatCurrency } from "@/lib/utils";
 
 interface BudgetProgressProps {
@@ -39,7 +39,7 @@ export default function BudgetProgress({dashboardData, isLoading, error}: Budget
 
   return (
     <div className="space-y-4">
-      {dashboardData.budgets.map((budget) => {
+      {dashboardData.budgets.map((budget: any) => {
         const percentage = Math.min(
           Math.round((budget.current / budget.max) * 100),
           100
