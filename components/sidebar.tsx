@@ -11,6 +11,7 @@ import { TransactionCreateDialog } from "@/components/transaction-create-dialog"
 import { BudgetCreateDialog } from "@/components/budget-create-dialog"
 import { useAuthControllerMe } from "@/lib/api/auth/hooks/use-auth-controller-me"
 import { useAuthControllerLogout } from "@/lib/api/auth/hooks/use-auth-controller-logout"
+import { clearAuthTokenCookie } from "@/lib/auth/token-cookie"
 import { kubbClientConfig } from "@/lib/kubb-client"
 
 const routes = [
@@ -154,8 +155,12 @@ export default function Sidebar() {
               variant="outline"
               className={cn("mt-2 w-full justify-start", isCollapsed && "justify-center px-0")}
               onClick={async () => {
-                await logoutMutation.mutateAsync()
-                window.location.href = "/login"
+                try {
+                  await logoutMutation.mutateAsync()
+                } finally {
+                  clearAuthTokenCookie()
+                  window.location.href = "/login"
+                }
               }}
             >
               {!isCollapsed && <span>Sair</span>}

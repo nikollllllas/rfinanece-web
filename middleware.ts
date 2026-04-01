@@ -3,20 +3,21 @@ import { AUTH_COOKIE_NAME } from "@/lib/auth/constants"
 
 const publicPaths = ["/login"]
 
-export function middleware(request: NextRequest) {
+export const middleware = (request: NextRequest) => {
   const { pathname } = request.nextUrl
-  const isApiPath = pathname.startsWith("/api/")
-  const isApiAuthPath = pathname.startsWith("/api/auth/")
   const isStaticPath =
-    pathname.startsWith("/_next") || pathname.startsWith("/favicon.ico") || pathname.includes(".")
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon.ico") ||
+    pathname.includes(".")
   const isPublicPath = publicPaths.includes(pathname)
 
-  if (isApiPath || isApiAuthPath || isStaticPath) {
+  if (isStaticPath) {
     return NextResponse.next()
   }
 
+  // Token emitido pela API externa; o middleware só exige presença (validação no backend).
   const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
-  if (!token) {
+  if (!token || token.length === 0) {
     if (isPublicPath) {
       return NextResponse.next()
     }
@@ -31,5 +32,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 }

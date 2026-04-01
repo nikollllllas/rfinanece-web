@@ -1,4 +1,10 @@
-import type { CategoryType, PaymentMethod, TransactionType } from "@prisma/client"
+export type CategoryType = "GANHO" | "GASTO" | "AMBOS"
+
+export type TransactionType = "GANHO" | "GASTO"
+
+export type PaymentMethod = "PIX" | "DEBITO" | "CREDITO"
+
+export type TransactionTag = "FALTA" | "PAGO" | "DEVOLVER" | "ECONOMIA"
 
 export interface TransactionData {
   description: string
@@ -7,7 +13,7 @@ export interface TransactionData {
   type: TransactionType
   categoryId: string
   notes?: string
-  tag?: "FALTA" | "PAGO" | "DEVOLVER" | "ECONOMIA" | null
+  tag?: TransactionTag | null
   paymentMethod?: PaymentMethod | null
   installmentCount?: number
 }
@@ -35,4 +41,3 @@ export type Transaction = any
 export type Category = any
 export type Budget = any
 export type DashboardData = any
-

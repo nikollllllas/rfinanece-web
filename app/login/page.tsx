@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuthControllerLogin } from "@/lib/api/auth/hooks/use-auth-controller-login"
+import { setAuthTokenCookie } from "@/lib/auth/token-cookie"
 import { kubbClientConfig } from "@/lib/kubb-client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -24,7 +25,17 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      await loginMutation.mutateAsync({ data: { email, password } })
+      const payload = await loginMutation.mutateAsync({
+        data: { email, password },
+      })
+      if (
+        payload &&
+        typeof payload === "object" &&
+        "accessToken" in payload &&
+        typeof (payload as { accessToken: unknown }).accessToken === "string"
+      ) {
+        setAuthTokenCookie((payload as { accessToken: string }).accessToken)
+      }
 
       router.replace("/")
       router.refresh()
