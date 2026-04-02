@@ -8,7 +8,7 @@ import {
 import { getAuthTokenFromCookie } from "@/lib/auth/token-cookie"
 
 /** Produção hospedada no Render; sobrescreva com NEXT_PUBLIC_API_BASE_URL para API local. */
-const DEFAULT_API_BASE_URL = "https://rfinance-api.onrender.com"
+const DEFAULT_API_BASE_URL = "https://rfinance-api-nikollllllas3421-08y5tek2.leapcell.dev"
 
 const normalizeBaseUrl = (value: string) => value.replace(/\/+$/, "")
 
