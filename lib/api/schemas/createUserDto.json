@@ -1,0 +1,11 @@
+{
+	"type": "object",
+	"properties": {
+		"name": { "type": "string", "example": "Maria Silva" },
+		"email": { "type": "string", "example": "maria@rfinance.local" },
+		"password": { "type": "string", "example": "User@123" },
+		"role": { "type": "string", "enum": ["ADMIN", "USER"], "example": "USER" }
+	},
+	"required": ["name", "email", "password", "role"],
+	"x-readme-ref-name": "CreateUserDto"
+}

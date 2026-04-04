@@ -4,16 +4,26 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { BarChart3, CreditCard, Home, PieChart, Plus, Settings, Wallet } from "lucide-react"
+import { CreditCard, Home, PieChart, Plus, Users, Wallet } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useMediaQuery } from "@/hooks/use-mobile"
 import { TransactionCreateDialog } from "@/components/transaction-create-dialog"
 import { BudgetCreateDialog } from "@/components/budget-create-dialog"
 import { useAuthControllerLogout } from "@/lib/api/auth/hooks/use-auth-controller-logout"
+import { useAuthControllerMe } from "@/lib/api/auth/hooks/use-auth-controller-me"
 import { clearAuthTokenCookie } from "@/lib/auth/token-cookie"
+import { parseCurrentUser } from "@/lib/auth/current-user"
 import { kubbClientConfig } from "@/lib/kubb-client"
 
-const routes = [
+type SidebarRoute = {
+  label: string
+  icon: typeof Home
+  href: string
+  color: string
+  adminOnly?: boolean
+}
+
+const routes: SidebarRoute[] = [
   {
     label: "Painel",
     icon: Home,
@@ -38,6 +48,13 @@ const routes = [
     href: "/categories",
     color: "text-emerald-500",
   },
+  {
+    label: "Usuários",
+    icon: Users,
+    href: "/admin/users",
+    color: "text-amber-500",
+    adminOnly: true,
+  },
 ]
 
 export default function Sidebar() {
@@ -46,6 +63,12 @@ export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isBudgetDialogOpen, setBudgetDialogOpen] = useState(false)
+  const meQuery = useAuthControllerMe({
+    client: kubbClientConfig,
+  })
+  const currentUser = parseCurrentUser(meQuery.data)
+  const isAdmin = currentUser?.role === "ADMIN"
+  const visibleRoutes = routes.filter((route) => !route.adminOnly || isAdmin)
   const logoutMutation = useAuthControllerLogout({
     client: kubbClientConfig,
   })
@@ -107,17 +130,20 @@ export default function Sidebar() {
                 strokeLinejoin="round"
                 className={cn("h-4 w-4 transition-transform", isCollapsed ? "rotate-180" : "rotate-0")}
               >
+                <title>{isCollapsed ? "Expandir menu lateral" : "Recolher menu lateral"}</title>
                 <path d="m15 6-6 6 6 6" />
               </svg>
             </Button>
           </div>
 
           <div className="space-y-1">
-            {routes
+            {visibleRoutes
               .map((route) => (
               <Link
                 key={route.href}
                 href={route.href}
+                aria-label={route.label}
+                title={route.label}
                 className={cn(
                   "flex items-center py-3 px-3 text-sm font-medium rounded-lg transition-colors hover:bg-accent hover:text-accent-foreground",
                   pathname === route.href ? "bg-accent text-accent-foreground" : "text-muted-foreground",

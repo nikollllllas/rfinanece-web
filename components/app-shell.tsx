@@ -7,7 +7,10 @@ import { CategoriesProvider } from "@/components/categories-provider"
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const isAuthPage = pathname.startsWith("/login")
+  const isAuthPage =
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/reset-password")
 
   if (isAuthPage) {
     return <>{children}</>

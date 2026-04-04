@@ -1,0 +1,9 @@
+{
+	"type": "object",
+	"properties": {
+		"name": { "type": "string", "example": "Maria Silva" },
+		"email": { "type": "string", "example": "maria@rfinance.local" },
+		"role": { "type": "string", "enum": ["ADMIN", "USER"], "example": "USER" }
+	},
+	"x-readme-ref-name": "UpdateUserByAdminDto"
+}

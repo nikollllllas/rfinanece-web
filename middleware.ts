@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { AUTH_COOKIE_NAME } from "@/lib/auth/constants"
 
-const publicPaths = ["/login"]
+const publicPaths = ["/login", "/forgot-password", "/reset-password"]
 
 export const middleware = (request: NextRequest) => {
   const { pathname } = request.nextUrl

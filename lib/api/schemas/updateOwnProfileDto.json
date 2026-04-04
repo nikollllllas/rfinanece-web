@@ -1,0 +1,8 @@
+{
+	"type": "object",
+	"properties": {
+		"name": { "type": "string", "example": "Maria Silva" },
+		"email": { "type": "string", "example": "maria@rfinance.local" }
+	},
+	"x-readme-ref-name": "UpdateOwnProfileDto"
+}

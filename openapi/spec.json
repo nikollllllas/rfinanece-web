@@ -24,6 +24,242 @@
         ]
       }
     },
+    "/v1/users": {
+      "get": {
+        "operationId": "UsersController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "perPage",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10,
+              "example": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Busca por nome ou e-mail",
+            "schema": {
+              "example": "maria@empresa.com",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuários listados com sucesso"
+          },
+          "401": {
+            "description": "Não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para executar esta ação"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "users"
+        ]
+      },
+      "post": {
+        "operationId": "UsersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuário criado com sucesso"
+          },
+          "401": {
+            "description": "Não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para executar esta ação"
+          },
+          "409": {
+            "description": "E-mail já está em uso"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/v1/users/me": {
+      "put": {
+        "operationId": "UsersController_updateOwnProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOwnProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Perfil atualizado com sucesso"
+          },
+          "401": {
+            "description": "Não autenticado"
+          },
+          "409": {
+            "description": "E-mail já está em uso"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/v1/users/{id}": {
+      "put": {
+        "operationId": "UsersController_updateByAdmin",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserByAdminDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Usuário atualizado com sucesso"
+          },
+          "401": {
+            "description": "Não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para executar esta ação"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          },
+          "409": {
+            "description": "E-mail já está em uso"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/v1/users/{id}/password": {
+      "put": {
+        "operationId": "UsersController_adminResetPassword",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "success": true
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autenticado"
+          },
+          "403": {
+            "description": "Sem permissão para executar esta ação"
+          },
+          "404": {
+            "description": "Usuário não encontrado"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/v1/auth/login": {
       "post": {
         "operationId": "AuthController_login",
@@ -59,6 +295,75 @@
           },
           "401": {
             "description": "Credenciais inválidas"
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/forgot-password": {
+      "post": {
+        "operationId": "AuthController_forgotPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Solicitação de recuperação recebida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "message": "Se existir uma conta com este e-mail, enviaremos as instruções de recuperação."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/v1/auth/reset-password": {
+      "post": {
+        "operationId": "AuthController_resetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "success": true
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token de recuperação inválido ou expirado"
           }
         },
         "tags": [
@@ -872,6 +1177,83 @@
       }
     },
     "schemas": {
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Maria Silva"
+          },
+          "email": {
+            "type": "string",
+            "example": "maria@rfinance.local"
+          },
+          "password": {
+            "type": "string",
+            "example": "User@123"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "ADMIN",
+              "USER"
+            ],
+            "example": "USER"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password",
+          "role"
+        ]
+      },
+      "UpdateOwnProfileDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Maria Silva"
+          },
+          "email": {
+            "type": "string",
+            "example": "maria@rfinance.local"
+          }
+        }
+      },
+      "UpdateUserByAdminDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Maria Silva"
+          },
+          "email": {
+            "type": "string",
+            "example": "maria@rfinance.local"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "ADMIN",
+              "USER"
+            ],
+            "example": "USER"
+          }
+        }
+      },
+      "AdminResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "example": "NovaSenha@123"
+          }
+        },
+        "required": [
+          "password"
+        ]
+      },
       "LoginDto": {
         "type": "object",
         "properties": {
@@ -886,6 +1268,35 @@
         },
         "required": [
           "email",
+          "password"
+        ]
+      },
+      "ForgotPasswordDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "admin@rfinance.local"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "plain-text-recovery-token"
+          },
+          "password": {
+            "type": "string",
+            "example": "NovaSenha@123"
+          }
+        },
+        "required": [
+          "token",
           "password"
         ]
       },
