@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +25,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { CategoryColorPicker } from "@/components/category-color-picker";
+import { CategoryIconPicker } from "@/components/category-icon-picker";
 
 interface CategoryEditDialogProps {
   categoryId: string;
@@ -40,7 +41,6 @@ export function CategoryEditDialog({
   onOpenChange,
   onSuccess,
 }: CategoryEditDialogProps) {
-  const router = useRouter();
   const { toast } = useToast();
 
   const [category, setCategory] = useState<any>(null);
@@ -85,21 +85,6 @@ export function CategoryEditDialog({
 
     loadCategory();
   }, [categoryId, open, toast, onOpenChange]);
-
-  const presetColors = [
-    "#ef4444", // red
-    "#f97316", // orange
-    "#f59e0b", // amber
-    "#84cc16", // lime
-    "#10b981", // emerald
-    "#06b6d4", // cyan
-    "#3b82f6", // blue
-    "#6366f1", // indigo
-    "#8b5cf6", // violet
-    "#d946ef", // fuchsia
-    "#ec4899", // pink
-    "#64748b", // slate
-  ];
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -219,43 +204,12 @@ export function CategoryEditDialog({
 
               <div className="space-y-2">
                 <Label htmlFor="color">Cor</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="color"
-                    name="color"
-                    type="color"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    className="w-12 h-10 p-1 cursor-pointer"
-                  />
-                  <div className="flex-1 grid grid-cols-6 gap-2">
-                    {presetColors.map((presetColor) => (
-                      <button
-                        key={presetColor}
-                        type="button"
-                        className="w-6 h-6 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                        style={{ backgroundColor: presetColor }}
-                        onClick={() => setColor(presetColor)}
-                        aria-label={`Selecionar cor ${presetColor}`}
-                      />
-                    ))}
-                  </div>
-                </div>
+                <CategoryColorPicker color={color} onColorChange={setColor} />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="icon">Ícone (Opcional)</Label>
-                <Input
-                  id="icon"
-                  name="icon"
-                  placeholder="Nome do ícone (ex: Home, ShoppingBag)"
-                  value={icon}
-                  onChange={(e) => setIcon(e.target.value)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Use nomes de ícones do Lucide React (ShoppingBag, Home, Car,
-                  etc.)
-                </p>
+                <CategoryIconPicker icon={icon} onIconChange={setIcon} />
               </div>
             </div>
             <DialogFooter>

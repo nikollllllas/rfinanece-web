@@ -81,6 +81,22 @@ export default function TransactionsPage() {
     setSelectedMonth(month)
   }
 
+  const totalExpenses = transactions.reduce(
+    (acc, transaction) =>
+      acc + Number(transaction.type === "GASTO" ? transaction.amount : 0),
+    0
+  )
+  const totalIncome = transactions.reduce(
+    (acc, transaction) =>
+      acc + Number(transaction.type === "GANHO" ? transaction.amount : 0),
+    0
+  )
+  const monthlyBalance = totalIncome - totalExpenses
+  const monthlyBalanceDisplay =
+    monthlyBalance < 0
+      ? `-${formatCurrency(Math.abs(monthlyBalance))}`
+      : formatCurrency(monthlyBalance)
+
   const SkeletonTable = () => (
     <div className="rounded-md border">
       <Table>
@@ -294,15 +310,20 @@ export default function TransactionsPage() {
                           Total de Gastos: {' '}
                         </span>
                         <span>
-                          {formatCurrency(transactions.reduce((acc, transaction) => acc + Number(transaction.category?.type === "GASTO" ? transaction.amount : 0), 0))}
+                          {formatCurrency(totalExpenses)}
                         </span>
                       </TableCell>
                       <TableCell colSpan={2} className="text-right">
                         <span className="font-medium">
-                          Total movimentado no mês: {' '}
+                          Saldo do mês: {' '}
                         </span>
-                        <span>
-                          {formatCurrency(transactions.reduce((acc, transaction) => acc + Number(transaction.amount), 0))}
+                        <span
+                          className={cn(
+                            "font-medium",
+                            monthlyBalance < 0 ? "text-red-600" : "text-green-600"
+                          )}
+                        >
+                          {monthlyBalanceDisplay}
                         </span>
                       </TableCell>
                     </TableRow>

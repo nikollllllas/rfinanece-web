@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { useMediaQuery } from "@/hooks/use-mobile"
 import { TransactionCreateDialog } from "@/components/transaction-create-dialog"
 import { BudgetCreateDialog } from "@/components/budget-create-dialog"
-import { useAuthControllerMe } from "@/lib/api/auth/hooks/use-auth-controller-me"
 import { useAuthControllerLogout } from "@/lib/api/auth/hooks/use-auth-controller-logout"
 import { clearAuthTokenCookie } from "@/lib/auth/token-cookie"
 import { kubbClientConfig } from "@/lib/kubb-client"
@@ -41,26 +40,15 @@ const routes = [
   },
 ]
 
-type AuthUser = {
-  id: string
-  name: string
-  email: string
-  role: "ADMIN" | "USER"
-}
-
 export default function Sidebar() {
   const pathname = usePathname()
   const isMobile = useMediaQuery("(max-width: 768px)")
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isBudgetDialogOpen, setBudgetDialogOpen] = useState(false)
-  const meQuery = useAuthControllerMe({
-    client: kubbClientConfig,
-  })
   const logoutMutation = useAuthControllerLogout({
     client: kubbClientConfig,
   })
-  const user = (meQuery.data?.user ?? null) as AuthUser | null
 
   useEffect(() => {
     const savedState = localStorage.getItem("sidebarCollapsed")
@@ -126,7 +114,6 @@ export default function Sidebar() {
 
           <div className="space-y-1">
             {routes
-              .filter((route) => (route.href === "/categories" ? user?.role === "ADMIN" : true))
               .map((route) => (
               <Link
                 key={route.href}

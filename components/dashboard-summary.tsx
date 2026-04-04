@@ -34,6 +34,9 @@ export function DashboardSummary( {dashboardData, isLoading, error}: DashboardSu
     );
   }
 
+  const savingsAmount = Number(dashboardData.summary.savings.amount ?? 0)
+  const isPositiveSavings = savingsAmount >= 0
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card>
@@ -83,9 +86,20 @@ export function DashboardSummary( {dashboardData, isLoading, error}: DashboardSu
           <CardTitle className="text-sm font-medium">Economia</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
-            {formatCurrency(dashboardData.summary.savings.amount)}
+          <div
+            className={`text-2xl font-bold ${
+              isPositiveSavings ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {formatCurrency(Math.abs(savingsAmount))}
           </div>
+          <p
+            className={`text-xs font-medium ${
+              isPositiveSavings ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {isPositiveSavings ? "Economizou" : "Devendo"}
+          </p>
           <p className="text-xs text-muted-foreground">
             {formatChange(dashboardData.summary.savings.change)} em relação ao
             mês anterior

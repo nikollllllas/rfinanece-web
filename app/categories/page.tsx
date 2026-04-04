@@ -4,9 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
-import Link from "next/link";
 import { useCategories } from "@/hooks/use-categories";
-import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -21,16 +19,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { CategoryEditDialog } from "@/components/category-edit-dialog";
+import { CategoryCreateDialog } from "@/components/category-create-dialog";
 
 export default function CategoriesPage() {
   const { categories, isLoading, error, removeCategory, refreshCategories } =
     useCategories();
-  const router = useRouter();
   const { toast } = useToast();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(
     null
   );
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleDelete = async (id: string) => {
@@ -97,11 +96,9 @@ export default function CategoriesPage() {
               <span className="text-lg">Categorias</span>
             </div>
             <div className="ml-auto flex items-center gap-2">
-              <Button asChild size="sm">
-                <Link href="/categories/new">
-                  <Plus className="mr-1 h-4 w-4" />
-                  Nova Categoria
-                </Link>
+              <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className="mr-1 h-4 w-4" />
+                Nova Categoria
               </Button>
             </div>
           </div>
@@ -124,12 +121,10 @@ export default function CategoriesPage() {
             <span className="text-lg">Categorias</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <Button asChild size="sm">
-              <Link href="/categories/new">
+              <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
                 <Plus className="mr-1 h-4 w-4" />
                 Nova Categoria
-              </Link>
-            </Button>
+              </Button>
           </div>
         </div>
       </header>
@@ -145,11 +140,9 @@ export default function CategoriesPage() {
             <p className="text-muted-foreground mb-4">
               Nenhuma categoria encontrada.
             </p>
-            <Button asChild>
-              <Link href="/categories/new">
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
                 <Plus className="mr-1 h-4 w-4" />
                 Criar Nova Categoria
-              </Link>
             </Button>
           </div>
         ) : (
@@ -233,17 +226,18 @@ export default function CategoriesPage() {
             ))}
 
             <Card className="flex flex-col items-center justify-center p-6 border-dashed">
-              <Button asChild variant="outline" className="h-auto p-8 w-full">
-                <Link
-                  href="/categories/new"
-                  className="flex flex-col items-center gap-2"
-                >
+              <Button
+                variant="outline"
+                className="h-auto w-full p-8"
+                onClick={() => setIsCreateDialogOpen(true)}
+              >
+                <span className="flex flex-col items-center gap-2">
                   <Plus className="h-6 w-6" />
                   <span className="text-lg font-medium">Nova Categoria</span>
                   <span className="text-sm text-muted-foreground text-center">
                     Crie uma nova categoria
                   </span>
-                </Link>
+                </span>
               </Button>
             </Card>
           </div>
@@ -261,6 +255,12 @@ export default function CategoriesPage() {
           onSuccess={handleCategoryChanged}
         />
       )}
+
+      <CategoryCreateDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSuccess={handleCategoryChanged}
+      />
     </div>
   );
 }

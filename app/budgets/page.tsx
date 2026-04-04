@@ -21,11 +21,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BudgetEditDialog } from "@/components/budget-edit-dialog"
 import { BudgetCreateDialog } from "@/components/budget-create-dialog"
 import { formatBudgetMonth, formatCurrency } from "@/lib/utils"
+import { useCategories } from "@/hooks/use-categories"
+import { getBudgetProgressStyle } from "@/lib/budget-progress-style"
 
 const BudgetCard = React.memo(({ budget, onDeleted }: { budget: any; onDeleted?: () => void }) => {
   const { progress, isLoading, error } = useBudgetProgress(budget.id)
   const { toast } = useToast()
   const { removeBudget } = useBudgets()
+  const { getCategoryById } = useCategories()
   const [isDeleting, setIsDeleting] = useState(false)
   const [showEditDialog, setShowEditDialog] = useState(false)
 
@@ -87,6 +90,17 @@ const BudgetCard = React.memo(({ budget, onDeleted }: { budget: any; onDeleted?:
   }
 
   const { percentage, isOverBudget } = progress
+  const categoryType = (budget.category?.type ??
+    getCategoryById(budget.categoryId)?.type) as
+    | "GANHO"
+    | "GASTO"
+    | "AMBOS"
+    | undefined
+  const progressStyle = getBudgetProgressStyle(
+    categoryType,
+    isOverBudget,
+    budget.category?.color
+  )
 
   return (
     <>
@@ -94,7 +108,9 @@ const BudgetCard = React.memo(({ budget, onDeleted }: { budget: any; onDeleted?:
         <CardHeader className="pb-2">
           <div className="flex justify-between items-center">
             <CardTitle className="text-lg capitalize">{budget.category?.name}</CardTitle>
-            <span className={`text-sm font-medium ${isOverBudget ? "text-red-500" : ""}`}>{percentage}%</span>
+            <span className={`text-sm font-medium ${progressStyle.valueTextClassName}`}>
+              {percentage}%
+            </span>
           </div>
           <CardDescription>
             {formatCurrency(Number(budget.amount))} • {formatBudgetMonth(budget.budgetMonth)}
@@ -103,15 +119,17 @@ const BudgetCard = React.memo(({ budget, onDeleted }: { budget: any; onDeleted?:
         <CardContent>
           <Progress
             value={percentage}
-            className={`h-2 ${isOverBudget ? "bg-red-100" : "bg-gray-100"}`}
-            indicatorClassName={isOverBudget ? "bg-red-500" : budget.category?.color}
+            className={`h-2 ${progressStyle.trackClassName}`}
+            indicatorClassName={progressStyle.indicatorClassName}
           />
           <div className="mt-2 text-xs text-muted-foreground flex justify-between">
             <span>Mês: {formatBudgetMonth(budget.budgetMonth)}</span>
-            {isOverBudget && <span className="text-red-500">Acima do orçamento</span>}
+            {progressStyle.showOverBudgetWarning && (
+              <span className={progressStyle.warningTextClassName}>Acima do orçamento</span>
+            )}
           </div>
           <div className="mt-1 text-sm">
-            <span className={isOverBudget ? "text-red-500 font-medium" : ""}>
+            <span className={progressStyle.amountTextClassName}>
               {formatCurrency(progress.current)} / {formatCurrency(Number(budget.amount))}
             </span>
           </div>

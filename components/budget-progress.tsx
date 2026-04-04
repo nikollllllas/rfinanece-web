@@ -4,6 +4,8 @@ import { Progress } from "@/components/ui/progress";
 import { Loader2 } from "lucide-react";
 import { DashboardData } from "@/lib/api-types";
 import { formatCurrency } from "@/lib/utils";
+import { useCategories } from "@/hooks/use-categories";
+import { getBudgetProgressStyle } from "@/lib/budget-progress-style";
 
 interface BudgetProgressProps {
   dashboardData: DashboardData | null;
@@ -12,6 +14,8 @@ interface BudgetProgressProps {
 }
 
 export default function BudgetProgress({dashboardData, isLoading, error}: BudgetProgressProps) {
+  const { categories } = useCategories();
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-[300px]">
@@ -45,20 +49,31 @@ export default function BudgetProgress({dashboardData, isLoading, error}: Budget
           100
         );
         const isOverBudget = budget.current > budget.max;
+        const categoryType = (budget.categoryType ??
+          categories.find((category) => category.name === budget.category)?.type) as
+          | "GANHO"
+          | "GASTO"
+          | "AMBOS"
+          | undefined;
+        const progressStyle = getBudgetProgressStyle(
+          categoryType,
+          isOverBudget,
+          budget.color
+        );
 
         return (
           <div key={budget.id} className="space-y-1">
             <div className="flex justify-between text-sm">
               <span>{budget.category}</span>
-              <span className={isOverBudget ? "text-red-500 font-medium" : ""}>
+              <span className={progressStyle.amountTextClassName}>
                 {formatCurrency(budget.current)} / {formatCurrency(budget.max)}
-                {isOverBudget && " (Acima do orçamento)"}
+                {progressStyle.showOverBudgetWarning && " (Acima do orçamento)"}
               </span>
             </div>
             <Progress
               value={percentage}
-              className={`h-2 ${isOverBudget ? "bg-red-100" : "bg-gray-100"}`}
-              indicatorClassName={isOverBudget ? "bg-red-500" : budget.color}
+              className={`h-2 ${progressStyle.trackClassName}`}
+              indicatorClassName={progressStyle.indicatorClassName}
             />
           </div>
         );
