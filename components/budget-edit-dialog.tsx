@@ -9,7 +9,9 @@ import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -85,9 +87,8 @@ export function BudgetEditDialog({
     loadBudget();
   }, [budgetId, open, toast, onOpenChange]);
 
-  const expenseCategories = categories.filter(
-    (category) => category.type === "GASTO" || category.type === "AMBOS"
-  );
+  const incomeCategories = categories.filter((c) => c.type === "GANHO" || c.type === "AMBOS");
+  const expenseCategories = categories.filter((c) => c.type === "GASTO" || c.type === "AMBOS");
 
   const formatMonthDisplay = (monthValue: string) => {
     const [year, month] = monthValue.split('-')
@@ -181,16 +182,33 @@ export function BudgetEditDialog({
                       <SelectItem value="loading" disabled>
                         Carregando categorias...
                       </SelectItem>
-                    ) : expenseCategories.length > 0 ? (
-                      expenseCategories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))
-                    ) : (
+                    ) : incomeCategories.length === 0 && expenseCategories.length === 0 ? (
                       <SelectItem value="none" disabled>
                         Nenhuma categoria disponível
                       </SelectItem>
+                    ) : (
+                      <>
+                        {incomeCategories.length > 0 && (
+                          <SelectGroup>
+                            <SelectLabel>Ganho</SelectLabel>
+                            {incomeCategories.map((category) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        )}
+                        {expenseCategories.length > 0 && (
+                          <SelectGroup>
+                            <SelectLabel>Gasto</SelectLabel>
+                            {expenseCategories.map((category) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        )}
+                      </>
                     )}
                   </SelectContent>
                 </Select>
