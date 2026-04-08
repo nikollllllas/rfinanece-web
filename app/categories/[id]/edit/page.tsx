@@ -269,12 +269,12 @@ export default function EditCategoryPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="color">Cor</Label>
-                <CategoryColorPicker color={color} onColorChange={setColor} />
+                <CategoryColorPicker color={color} onColorChange={setColor} disabled={category.isDefault} />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="icon">Ícone (Opcional)</Label>
-                <CategoryIconPicker icon={icon} onIconChange={setIcon} />
+                <CategoryIconPicker icon={icon} onIconChange={setIcon} disabled={category.isDefault} />
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
@@ -286,7 +286,7 @@ export default function EditCategoryPage() {
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={isSaving}>
+              <Button type="submit" disabled={isSaving || category.isDefault}>
                 {isSaving ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

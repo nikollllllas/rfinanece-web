@@ -44,8 +44,9 @@ export function BudgetCreateDialog({ open, onOpenChange, onSuccess }: BudgetCrea
   const [categoryId, setCategoryId] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const incomeCategories = categories.filter((c) => c.type === "GANHO" || c.type === "AMBOS")
-  const expenseCategories = categories.filter((c) => c.type === "GASTO" || c.type === "AMBOS")
+  const incomeCategories = categories.filter((c) => c.type === "GANHO")
+  const expenseCategories = categories.filter((c) => c.type === "GASTO")
+  const bothCategories = categories.filter((c) => c.type === "AMBOS")
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -107,7 +108,7 @@ export function BudgetCreateDialog({ open, onOpenChange, onSuccess }: BudgetCrea
                     <SelectItem value="loading" disabled>
                       Carregando categorias...
                     </SelectItem>
-                  ) : incomeCategories.length === 0 && expenseCategories.length === 0 ? (
+                  ) : incomeCategories.length === 0 && expenseCategories.length === 0 && bothCategories.length === 0 ? (
                     <SelectItem value="none" disabled>
                       Nenhuma categoria disponível
                     </SelectItem>
@@ -127,6 +128,16 @@ export function BudgetCreateDialog({ open, onOpenChange, onSuccess }: BudgetCrea
                         <SelectGroup>
                           <SelectLabel>Gasto</SelectLabel>
                           {expenseCategories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      )}
+                      {bothCategories.length > 0 && (
+                        <SelectGroup>
+                          <SelectLabel>Ganho e Gasto</SelectLabel>
+                          {bothCategories.map((category) => (
                             <SelectItem key={category.id} value={category.id}>
                               {category.name}
                             </SelectItem>

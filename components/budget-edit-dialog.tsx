@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,18 +43,17 @@ export function BudgetEditDialog({
   onOpenChange,
   onSuccess,
 }: BudgetEditDialogProps) {
-  const router = useRouter();
   const { toast } = useToast();
   const { categories, isLoading: categoriesLoading } = useCategories();
 
-  const [budget, setBudget] = useState<any>(null);
+  const [, setBudget] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const [amount, setAmount] = useState("")
-  const [budgetMonth, setBudgetMonth] = useState<string>()
-  const [categoryId, setCategoryId] = useState("")
+  const [amount, setAmount] = useState("");
+  const [budgetMonth, setBudgetMonth] = useState<string>();
+  const [categoryId, setCategoryId] = useState("");
 
   useEffect(() => {
     if (!open || !budgetId) return;
@@ -71,7 +69,7 @@ export function BudgetEditDialog({
         setCategoryId(data.categoryId);
       } catch (err) {
         setError(
-          err instanceof Error ? err : new Error("Falha ao carregar orçamento")
+          err instanceof Error ? err : new Error("Falha ao carregar orçamento"),
         );
         toast({
           title: "Erro",
@@ -87,14 +85,9 @@ export function BudgetEditDialog({
     loadBudget();
   }, [budgetId, open, toast, onOpenChange]);
 
-  const incomeCategories = categories.filter((c) => c.type === "GANHO" || c.type === "AMBOS");
-  const expenseCategories = categories.filter((c) => c.type === "GASTO" || c.type === "AMBOS");
-
-  const formatMonthDisplay = (monthValue: string) => {
-    const [year, month] = monthValue.split('-')
-    const date = new Date(parseInt(year), parseInt(month) - 1)
-    return date.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long' })
-  }
+  const incomeCategories = categories.filter((c) => c.type === "GANHO");
+  const expenseCategories = categories.filter((c) => c.type === "GASTO");
+  const bothCategories = categories.filter((c) => c.type === "AMBOS");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -117,7 +110,11 @@ export function BudgetEditDialog({
         categoryId,
       };
 
-      await budgetsControllerUpdate(budgetId, budgetData as any, kubbClientConfig);
+      await budgetsControllerUpdate(
+        budgetId,
+        budgetData as any,
+        kubbClientConfig,
+      );
 
       toast({
         title: "Orçamento atualizado",
@@ -182,7 +179,9 @@ export function BudgetEditDialog({
                       <SelectItem value="loading" disabled>
                         Carregando categorias...
                       </SelectItem>
-                    ) : incomeCategories.length === 0 && expenseCategories.length === 0 ? (
+                    ) : incomeCategories.length === 0 &&
+                      expenseCategories.length === 0 &&
+                      bothCategories.length === 0 ? (
                       <SelectItem value="none" disabled>
                         Nenhuma categoria disponível
                       </SelectItem>
@@ -202,6 +201,16 @@ export function BudgetEditDialog({
                           <SelectGroup>
                             <SelectLabel>Gasto</SelectLabel>
                             {expenseCategories.map((category) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        )}
+                        {bothCategories.length > 0 && (
+                          <SelectGroup>
+                            <SelectLabel>Ganho e Gasto</SelectLabel>
+                            {bothCategories.map((category) => (
                               <SelectItem key={category.id} value={category.id}>
                                 {category.name}
                               </SelectItem>
@@ -238,8 +247,17 @@ export function BudgetEditDialog({
               <div className="space-y-2">
                 <Label htmlFor="budgetMonth">Mês do Orçamento</Label>
                 <MonthPicker
-                  selectedMonth={budgetMonth ? new Date(budgetMonth) : undefined}
-                  onMonthSelect={(newMonth) => setBudgetMonth(newMonth.toISOString())}
+                  selectedMonth={
+                    budgetMonth
+                      ? (() => {
+                          const [y, m] = budgetMonth.split("-").map(Number);
+                          return new Date(y, m - 1);
+                        })()
+                      : undefined
+                  }
+                  onMonthSelect={(newMonth) =>
+                    setBudgetMonth(newMonth.toISOString())
+                  }
                 />
               </div>
             </div>
