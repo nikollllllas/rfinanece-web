@@ -22,7 +22,6 @@ import { BudgetEditDialog } from "@/components/budget-edit-dialog"
 import { BudgetCreateDialog } from "@/components/budget-create-dialog"
 import { formatBudgetMonth, formatCurrency } from "@/lib/utils"
 import { useCategories } from "@/hooks/use-categories"
-import { getBudgetProgressStyle } from "@/lib/budget-progress-style"
 
 const BudgetCard = React.memo(({ budget, onDeleted }: { budget: any; onDeleted?: () => void }) => {
   const { progress, isLoading, error } = useBudgetProgress(budget.id)
@@ -91,16 +90,28 @@ const BudgetCard = React.memo(({ budget, onDeleted }: { budget: any; onDeleted?:
 
   const { percentage, isOverBudget } = progress
   const categoryType = (budget.category?.type ??
-    getCategoryById(budget.categoryId)?.type) as
-    | "GANHO"
-    | "GASTO"
-    | "AMBOS"
-    | undefined
-  const progressStyle = getBudgetProgressStyle(
-    categoryType,
-    isOverBudget,
-    budget.category?.color
-  )
+    getCategoryById(budget.categoryId)?.type) as "GANHO" | "GASTO" | "AMBOS" | undefined
+
+  let track = "bg-gray-200"
+  let indicatorColor = "bg-gray-400"
+  let textColor = "text-muted-foreground"
+  let showOverBudgetWarning = false
+
+  if (categoryType === "GASTO") {
+    track = "bg-red-200"
+    textColor = "text-red-600"
+    indicatorColor = isOverBudget ? "bg-red-500" : "bg-red-400"
+    showOverBudgetWarning = isOverBudget
+  } else if (categoryType === "GANHO") {
+    track = "bg-green-200"
+    textColor = "text-green-600"
+    indicatorColor = isOverBudget ? "bg-green-500" : "bg-green-400"
+  } else if (categoryType === "AMBOS") {
+    track = "bg-yellow-200"
+    textColor = "text-yellow-600"
+    indicatorColor = isOverBudget ? "bg-yellow-500" : "bg-yellow-400"
+    showOverBudgetWarning = isOverBudget
+  }
 
   return (
     <>
@@ -108,7 +119,7 @@ const BudgetCard = React.memo(({ budget, onDeleted }: { budget: any; onDeleted?:
         <CardHeader className="pb-2">
           <div className="flex justify-between items-center">
             <CardTitle className="text-lg capitalize">{budget.category?.name}</CardTitle>
-            <span className={`text-sm font-medium ${progressStyle.valueTextClassName}`}>
+            <span className={`text-sm font-medium ${textColor}`}>
               {percentage}%
             </span>
           </div>
@@ -119,17 +130,17 @@ const BudgetCard = React.memo(({ budget, onDeleted }: { budget: any; onDeleted?:
         <CardContent>
           <Progress
             value={percentage}
-            className={`h-2 ${progressStyle.trackClassName}`}
-            indicatorClassName={progressStyle.indicatorClassName}
+            className={`h-2 ${track}`}
+            indicatorClassName={indicatorColor}
           />
           <div className="mt-2 text-xs text-muted-foreground flex justify-between">
             <span>Mês: {formatBudgetMonth(budget.budgetMonth)}</span>
-            {progressStyle.showOverBudgetWarning && (
-              <span className={progressStyle.warningTextClassName}>Acima do orçamento</span>
+            {showOverBudgetWarning && (
+              <span className="text-red-500">Acima do orçamento</span>
             )}
           </div>
           <div className="mt-1 text-sm">
-            <span className={progressStyle.amountTextClassName}>
+            <span className={textColor}>
               {formatCurrency(progress.current)} / {formatCurrency(Number(budget.amount))}
             </span>
           </div>
